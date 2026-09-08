@@ -8,6 +8,7 @@ import { authStore } from "../../store/auth.js";
 import { router } from "../../router/router.js";
 import { toast } from "../../components/Toast.js";
 import { getIcon } from "../../utils/icons.js";
+import { renderImageUploader, initImageUploader } from "../../components/ImageUploader.js";
 
 export function renderAdminSettingsView() {
   const settings = store.getSiteSettings();
@@ -81,10 +82,14 @@ export function renderAdminSettingsView() {
               <textarea class="form-textarea" id="setting-seodesc" rows="2">${escapeHtml(settings.seoDescription)}</textarea>
             </div>
 
-            <div class="form-group">
-              <label class="form-label" for="setting-socialimage">Default Social Share Image (Open Graph URL)</label>
-              <input type="text" class="form-input" id="setting-socialimage" value="${escapeHtml(settings.defaultSocialImage)}" placeholder="https://... og-preview.png" />
-            </div>
+            ${renderImageUploader({
+              id: "setting-socialimage",
+              value: settings.defaultSocialImage,
+              label: "Default Social Share Image (Open Graph / Twitter Card)",
+              helperText: "Upload a 1200x630 banner or paste an external image URL for social previews.",
+              placeholder: "https://... or upload from PC",
+              aspect: "16/9"
+            })}
           </div>
         </div>
 
@@ -132,7 +137,7 @@ export function renderAdminSettingsView() {
         </div>
       </div>
 
-      <!-- 4. SECURITY & AUTHENTICATION -->
+      <!-- 4. SECURITY & COMPLIANCE -->
       <div class="form-section">
         <div class="form-section-header">
           <div class="form-section-title">
@@ -172,6 +177,9 @@ export function renderAdminSettingsView() {
 }
 
 export function initAdminSettingsEvents(reRenderCallback) {
+  // Initialize Image Uploader for Social Share Image
+  initImageUploader(document, "setting-socialimage");
+
   // Settings Form Submit
   const form = document.getElementById("admin-settings-form");
   if (form) {

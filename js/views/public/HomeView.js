@@ -6,6 +6,16 @@
 
 import { store } from "../../store/state.js";
 import { getIcon } from "../../utils/icons.js";
+import { extractYouTubeVideoId, getYouTubeThumbnailUrl } from "../../utils/youtube.js";
+
+function getVideoThumbnail(video) {
+  if (video.thumbnail && video.thumbnail.trim()) return video.thumbnail;
+  if (video.youtubeUrl) {
+    const videoId = extractYouTubeVideoId(video.youtubeUrl);
+    if (videoId) return getYouTubeThumbnailUrl(videoId, "high");
+  }
+  return "";
+}
 
 export function renderHomeView() {
   const home = store.getHome();
@@ -62,34 +72,42 @@ export function renderHomeView() {
   `;
 
   // Featured Videos HTML
-  const videosHtml = featuredVideos.length > 0 ? featuredVideos.map((video, idx) => `
-    <article class="card card-hover reveal-card stagger-${(idx % 4) + 1}" id="featured-video-${video.id}">
-      <div class="card-media">
-        ${video.thumbnail ? `
-          <img src="${video.thumbnail}" alt="${video.title} Thumbnail" loading="lazy" />
-        ` : `
-          <div class="card-media-placeholder">
-            ${getIcon("play", 24)}
-            <span>[ YouTube Video Preview ]</span>
-          </div>
-        `}
-      </div>
-      <div class="card-body">
-        <div class="flex items-center justify-between gap-xs">
-          <span class="badge">${video.category || 'Tutorial'}</span>
-          <span class="text-xs text-muted font-mono">${video.views || '0 views'}</span>
+  const videosHtml = featuredVideos.length > 0 ? featuredVideos.map((video, idx) => {
+    const thumbUrl = getVideoThumbnail(video);
+    return `
+      <article class="card card-hover reveal-card stagger-${(idx % 4) + 1}" id="featured-video-${video.id}">
+        <div class="card-media">
+          ${thumbUrl ? `
+            <img 
+              src="${thumbUrl}" 
+              alt="${video.title} Thumbnail" 
+              loading="lazy" 
+              onerror="this.onerror=null; if(this.src.includes('maxresdefault.jpg')) this.src=this.src.replace('maxresdefault.jpg', 'hqdefault.jpg');" 
+            />
+          ` : `
+            <div class="card-media-placeholder">
+              ${getIcon("play", 24)}
+              <span>[ YouTube Video Preview ]</span>
+            </div>
+          `}
         </div>
-        <h3 style="font-size: var(--text-base); margin-top: 4px; line-height: 1.4;">${video.title}</h3>
-        <p style="font-size: var(--text-xs); line-height: 1.5; color: var(--text-muted); flex-grow: 1;">${video.description}</p>
-      </div>
-      <div class="card-footer">
-        <span class="text-xs text-muted font-mono">${video.uploadDate || 'Recent'}</span>
-        <a href="${video.youtubeUrl || '#'}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">
-          Watch on YouTube ↗
-        </a>
-      </div>
-    </article>
-  `).join("") : `
+        <div class="card-body">
+          <div class="flex items-center justify-between gap-xs">
+            <span class="badge">${video.category || 'Tutorial'}</span>
+            <span class="text-xs text-muted font-mono">${video.views || '0 views'}</span>
+          </div>
+          <h3 style="font-size: var(--text-base); margin-top: 4px; line-height: 1.4;">${video.title}</h3>
+          <p style="font-size: var(--text-xs); line-height: 1.5; color: var(--text-muted); flex-grow: 1;">${video.description}</p>
+        </div>
+        <div class="card-footer">
+          <span class="text-xs text-muted font-mono">${video.uploadDate || 'Recent'}</span>
+          <a href="${video.youtubeUrl || '#'}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">
+            Watch on YouTube ↗
+          </a>
+        </div>
+      </article>
+    `;
+  }).join("") : `
     <div style="grid-column: 1 / -1; text-align: center; padding: var(--space-xl); background: var(--bg-surface); border: 1px dashed var(--border-color); border-radius: var(--radius-md);">
       <div class="empty-state-icon">${getIcon("videos", 32)}</div>
       <p style="font-weight: 600;">No featured videos marked yet.</p>

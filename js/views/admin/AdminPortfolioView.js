@@ -7,6 +7,7 @@ import { store } from "../../store/state.js";
 import { modal } from "../../components/Modal.js";
 import { toast } from "../../components/Toast.js";
 import { getIcon } from "../../utils/icons.js";
+import { renderImageUploader, initImageUploader } from "../../components/ImageUploader.js";
 
 let portfolioCategoryFilter = "All";
 
@@ -247,15 +248,17 @@ function openPortfolioModal(itemToEdit = null, onSaved = null) {
           </div>
         </div>
         <div class="form-section-body">
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label" for="port-image">Image URL</label>
-              <input type="text" class="form-input" id="port-image" value="${escapeHtml(item.image)}" placeholder="https://..." />
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="port-links">Project Link / Source URL</label>
-              <input type="text" class="form-input" id="port-links" value="${escapeHtml(item.links)}" placeholder="https://..." />
-            </div>
+          ${renderImageUploader({
+            id: "port-image",
+            value: item.image,
+            label: "Portfolio Showcase Image",
+            helperText: "Upload a showcase image from PC or link external URL.",
+            aspect: "16/9"
+          })}
+
+          <div class="form-group" style="margin-top: var(--space-sm);">
+            <label class="form-label" for="port-links">Project Link / Source URL</label>
+            <input type="text" class="form-input" id="port-links" value="${escapeHtml(item.links)}" placeholder="https://..." />
           </div>
         </div>
       </div>
@@ -290,6 +293,9 @@ function openPortfolioModal(itemToEdit = null, onSaved = null) {
     bodyHtml,
     footerHtml,
     onOpen: (modalEl) => {
+      // Initialize Image Uploader for Portfolio Item Image
+      initImageUploader(modalEl, "port-image");
+
       modalEl.querySelector("#modal-port-cancel-btn").addEventListener("click", () => modal.close());
       const saveBtn = modalEl.querySelector("#modal-port-save-btn");
 

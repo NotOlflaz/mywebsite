@@ -6,6 +6,7 @@
 import { store } from "../../store/state.js";
 import { toast } from "../../components/Toast.js";
 import { getIcon } from "../../utils/icons.js";
+import { renderImageUploader, initImageUploader } from "../../components/ImageUploader.js";
 
 export function renderAdminHomeView() {
   const home = store.getHome();
@@ -67,11 +68,14 @@ export function renderAdminHomeView() {
             </div>
           </div>
           <div class="form-section-body">
-            <div class="form-group">
-              <label class="form-label" for="home-avatar-url">Avatar / Profile Image URL</label>
-              <input type="text" class="form-input" id="home-avatar-url" value="${escapeHtml(home.avatarUrl)}" placeholder="https://... or copy URL from Media Library" />
-              <span class="form-helper">Leave empty to display the stylish default gamer/developer icon placeholder.</span>
-            </div>
+            ${renderImageUploader({
+              id: "home-avatar-url",
+              value: home.avatarUrl,
+              label: "Hero Profile / Avatar Image",
+              helperText: "Upload avatar from PC (Square 1:1 ratio) or paste URL.",
+              placeholder: "https://... or upload from PC",
+              aspect: "1/1"
+            })}
           </div>
         </div>
 
@@ -125,6 +129,9 @@ export function renderAdminHomeView() {
 export function initAdminHomeEvents() {
   const form = document.getElementById("admin-home-editor-form");
   if (form) {
+    // Initialize Image Uploader for Home Hero Avatar
+    initImageUploader(form, "home-avatar-url");
+
     form.addEventListener("submit", (e) => {
       e.preventDefault();
       const saveBtn = document.getElementById("save-home-btn");

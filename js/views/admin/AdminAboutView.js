@@ -1,11 +1,7 @@
-/**
- * Admin About & Profile Editor View
- * Manage profile bio, specialized blurbs, skills breakdown, and toolstack.
- */
-
 import { store } from "../../store/state.js";
 import { toast } from "../../components/Toast.js";
 import { getIcon } from "../../utils/icons.js";
+import { renderImageUploader, initImageUploader } from "../../components/ImageUploader.js";
 
 export function renderAdminAboutView() {
   const about = store.getAbout();
@@ -49,10 +45,14 @@ export function renderAdminAboutView() {
               </div>
             </div>
 
-            <div class="form-group">
-              <label class="form-label" for="about-avatar">Avatar / Profile Image URL</label>
-              <input type="text" class="form-input" id="about-avatar" value="${escapeHtml(about.avatarUrl)}" placeholder="https://... or copy asset URL from Media Library" />
-            </div>
+            ${renderImageUploader({
+              id: "about-avatar",
+              value: about.avatarUrl,
+              label: "Creator Avatar / Profile Photo",
+              helperText: "Upload an avatar from PC (Square 1:1 ratio) or paste image URL.",
+              placeholder: "https://... or upload from PC",
+              aspect: "1/1"
+            })}
           </div>
         </div>
 
@@ -139,6 +139,9 @@ export function renderAdminAboutView() {
 export function initAdminAboutEvents() {
   const form = document.getElementById("admin-about-form");
   if (form) {
+    // Initialize Image Uploader for avatar
+    initImageUploader(form, "about-avatar");
+
     form.addEventListener("submit", (e) => {
       e.preventDefault();
       const saveBtn = document.getElementById("save-about-btn");

@@ -7,6 +7,8 @@ import { store } from "../../store/state.js";
 import { modal } from "../../components/Modal.js";
 import { toast } from "../../components/Toast.js";
 import { getIcon } from "../../utils/icons.js";
+import { extractYouTubeVideoId, getYouTubeThumbnailUrl } from "../../utils/youtube.js";
+import { renderImageUploader, initImageUploader } from "../../components/ImageUploader.js";
 
 let videoSearchQuery = "";
 let videoCategoryFilter = "All";
@@ -24,48 +26,52 @@ export function renderAdminVideosView() {
     return matchesCat && matchesSearch;
   });
 
-  const tableRowsHtml = filteredVideos.length > 0 ? filteredVideos.map(video => `
-    <tr id="admin-video-row-${video.id}">
-      <td>
-        <div class="flex items-center gap-sm">
-          <div style="width: 48px; height: 28px; background: var(--bg-surface-alt); border: 1px solid var(--border-color); border-radius: var(--radius-sm); overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 10px;">
-            ${video.thumbnail ? `<img src="${video.thumbnail}" style="width:100%;height:100%;object-fit:cover;" />` : getIcon('play', 12)}
-          </div>
-          <div>
-            <strong style="color: var(--text-main); font-size: var(--text-sm);">${video.title}</strong>
-            <div class="text-xs text-muted" style="max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-              ${video.description}
+  const tableRowsHtml = filteredVideos.length > 0 ? filteredVideos.map(video => {
+    const displayThumb = video.thumbnail || (video.youtubeId ? getYouTubeThumbnailUrl(video.youtubeId) : (video.youtubeUrl ? getYouTubeThumbnailUrl(video.youtubeUrl) : ''));
+    return `
+      <tr id="admin-video-row-${video.id}">
+        <td>
+          <div class="flex items-center gap-sm">
+            <div style="width: 52px; height: 32px; background: var(--bg-surface-alt); border: 1px solid var(--border-color); border-radius: var(--radius-sm); overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 10px; position: relative;">
+              ${displayThumb ? `<img src="${displayThumb}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" />` : getIcon('play', 12)}
+              ${video.thumbnail ? `<span style="position: absolute; bottom: 1px; right: 1px; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-primary);" title="Custom thumbnail applied"></span>` : ''}
+            </div>
+            <div>
+              <strong style="color: var(--text-main); font-size: var(--text-sm);">${video.title}</strong>
+              <div class="text-xs text-muted" style="max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                ${video.description}
+              </div>
             </div>
           </div>
-        </div>
-      </td>
-      <td><span class="badge">${video.category || 'General'}</span></td>
-      <td class="font-mono text-xs">${video.views || '0'}</td>
-      <td class="text-xs">${video.uploadDate || '-'}</td>
-      <td>
-        <button 
-          class="badge ${video.isFeatured ? 'badge-featured' : ''} toggle-video-featured-btn" 
-          data-id="${video.id}"
-          style="cursor: pointer;"
-          title="Click to toggle featured on Home page & Spotlight">
-          ${video.isFeatured ? 'Featured' : 'Standard'}
-        </button>
-      </td>
-      <td>
-        <div class="table-actions">
-          <a href="${video.youtubeUrl || '#'}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" title="Watch on YouTube">
-            ${getIcon('external', 13)}
-          </a>
-          <button class="btn btn-secondary btn-sm edit-video-btn" data-id="${video.id}" title="Edit Video">
-            ${getIcon('edit', 13)} Edit
+        </td>
+        <td><span class="badge">${video.category || 'General'}</span></td>
+        <td class="font-mono text-xs">${video.views || '0'}</td>
+        <td class="text-xs">${video.uploadDate || '-'}</td>
+        <td>
+          <button 
+            class="badge ${video.isFeatured ? 'badge-featured' : ''} toggle-video-featured-btn" 
+            data-id="${video.id}"
+            style="cursor: pointer;"
+            title="Click to toggle featured on Home page & Spotlight">
+            ${video.isFeatured ? 'Featured' : 'Standard'}
           </button>
-          <button class="btn btn-danger btn-sm delete-video-btn" data-id="${video.id}" title="Delete Video">
-            ${getIcon('trash', 13)}
-          </button>
-        </div>
-      </td>
-    </tr>
-  `).join("") : '';
+        </td>
+        <td>
+          <div class="table-actions">
+            <a href="${video.youtubeUrl || '#'}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" title="Watch on YouTube">
+              ${getIcon('external', 13)}
+            </a>
+            <button class="btn btn-secondary btn-sm edit-video-btn" data-id="${video.id}" title="Edit Video">
+              ${getIcon('edit', 13)} Edit
+            </button>
+            <button class="btn btn-danger btn-sm delete-video-btn" data-id="${video.id}" title="Delete Video">
+              ${getIcon('trash', 13)}
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join("") : '';
 
   return `
     <div class="admin-videos-page">
@@ -291,17 +297,48 @@ function openVideoFormModal(videoToEdit = null, onSaved = null) {
       <div class="form-section">
         <div class="form-section-header">
           <div class="form-section-title">
-            <span>3. Thumbnail & Summary</span>
+            <span>3. Video Thumbnail & Summary</span>
           </div>
         </div>
         <div class="form-section-body">
-          <div class="form-group">
-            <label class="form-label" for="video-thumbnail">Custom Thumbnail Image URL (Optional)</label>
-            <input type="text" class="form-input" id="video-thumbnail" value="${escapeHtml(video.thumbnail)}" placeholder="https://... or copy asset URL from Media Library" />
-            <span class="form-helper">If empty, YouTube default thumbnail placeholder will be used.</span>
+          
+          <!-- Auto-Detected YouTube Thumbnail Card -->
+          <div id="youtube-auto-thumb-container" style="background: var(--bg-surface-alt); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: var(--space-md); margin-bottom: var(--space-sm);">
+            <div class="flex items-center justify-between" style="margin-bottom: 8px;">
+              <span class="text-xs font-bold flex items-center gap-xs text-main">
+                <span style="color: #ef4444;">${getIcon("youtube", 16)}</span>
+                <span>Automatic YouTube Thumbnail</span>
+              </span>
+              <span class="badge" id="yt-detect-status-badge" style="background: var(--accent-surface); color: var(--accent-text); border-color: var(--accent-border);">
+                Auto Generated
+              </span>
+            </div>
+
+            <div id="yt-thumb-preview-box" style="width: 100%; max-height: 200px; aspect-ratio: 16/9; background: #000; border-radius: var(--radius-sm); overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative;">
+              <img id="yt-auto-thumb-img" src="" alt="YouTube Thumbnail Preview" style="width: 100%; height: 100%; object-fit: cover; display: none;" />
+              <div id="yt-no-url-placeholder" class="text-xs text-muted text-center" style="padding: var(--space-md);">
+                ${getIcon("play", 24)}
+                <div style="margin-top: 6px;">Enter a YouTube URL above to automatically generate the thumbnail.</div>
+              </div>
+            </div>
+            <div class="text-xs text-light" style="margin-top: 6px; font-size: 11px;">
+              By default, this official high-definition thumbnail is used across the website.
+            </div>
           </div>
 
-          <div class="form-group">
+          <!-- Custom Thumbnail Upload (Optional Override) -->
+          <div style="margin-top: var(--space-md);">
+            ${renderImageUploader({
+              id: "video-thumbnail",
+              value: video.thumbnail,
+              label: "Custom Thumbnail Override (Optional)",
+              helperText: "Upload a custom PNG/JPG/WEBP from PC if you don't want the default YouTube thumbnail.",
+              placeholder: "https://... or upload from PC",
+              aspect: "16/9"
+            })}
+          </div>
+
+          <div class="form-group" style="margin-top: var(--space-md);">
             <label class="form-label" for="video-description">Video Summary Description</label>
             <textarea class="form-textarea" id="video-description" rows="3" placeholder="Summary of topics covered in this video...">${escapeHtml(video.description)}</textarea>
           </div>
@@ -342,9 +379,58 @@ function openVideoFormModal(videoToEdit = null, onSaved = null) {
     title: isEdit ? `Edit Video: ${video.title}` : "Add New Video",
     bodyHtml,
     footerHtml,
+    isLarge: true,
     onOpen: (modalEl) => {
       const cancelBtn = modalEl.querySelector("#modal-cancel-btn");
       const saveBtn = modalEl.querySelector("#modal-save-video-btn");
+      const urlInput = modalEl.querySelector("#video-url");
+      const ytAutoImg = modalEl.querySelector("#yt-auto-thumb-img");
+      const ytPlaceholder = modalEl.querySelector("#yt-no-url-placeholder");
+      const ytStatusBadge = modalEl.querySelector("#yt-detect-status-badge");
+
+      // Initialize Reusable Image Uploader for custom thumbnail
+      initImageUploader(modalEl, "video-thumbnail");
+
+      // Update automatic YouTube thumbnail preview
+      const updateYouTubeThumbnailPreview = () => {
+        const url = urlInput ? urlInput.value.trim() : "";
+        const videoId = extractYouTubeVideoId(url);
+
+        if (videoId) {
+          const autoThumb = getYouTubeThumbnailUrl(videoId, "maxres");
+          if (ytAutoImg) {
+            ytAutoImg.src = autoThumb;
+            ytAutoImg.style.display = "block";
+            // Fallback to hqdefault if maxres fails
+            ytAutoImg.onerror = () => {
+              ytAutoImg.src = getYouTubeThumbnailUrl(videoId, "hq");
+            };
+          }
+          if (ytPlaceholder) ytPlaceholder.style.display = "none";
+          if (ytStatusBadge) {
+            ytStatusBadge.textContent = `ID: ${videoId}`;
+            ytStatusBadge.style.display = "inline-block";
+          }
+        } else {
+          if (ytAutoImg) {
+            ytAutoImg.src = "";
+            ytAutoImg.style.display = "none";
+          }
+          if (ytPlaceholder) ytPlaceholder.style.display = "block";
+          if (ytStatusBadge) {
+            ytStatusBadge.textContent = "No Video Detected";
+          }
+        }
+      };
+
+      if (urlInput) {
+        urlInput.addEventListener("input", updateYouTubeThumbnailPreview);
+        urlInput.addEventListener("change", updateYouTubeThumbnailPreview);
+        urlInput.addEventListener("paste", () => setTimeout(updateYouTubeThumbnailPreview, 50));
+      }
+
+      // Initial check on modal open
+      updateYouTubeThumbnailPreview();
 
       cancelBtn.addEventListener("click", () => modal.close());
 
@@ -375,10 +461,12 @@ function openVideoFormModal(videoToEdit = null, onSaved = null) {
         saveBtn.textContent = "⏳ Saving...";
 
         const tags = tagsRaw.split(",").map(t => t.trim()).filter(Boolean);
+        const youtubeId = extractYouTubeVideoId(youtubeUrl);
 
         const payload = {
           title,
           youtubeUrl,
+          youtubeId,
           category,
           views,
           uploadDate,

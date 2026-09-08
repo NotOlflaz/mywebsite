@@ -7,6 +7,7 @@ import { store } from "../../store/state.js";
 import { modal } from "../../components/Modal.js";
 import { toast } from "../../components/Toast.js";
 import { getIcon } from "../../utils/icons.js";
+import { renderImageUploader, initImageUploader } from "../../components/ImageUploader.js";
 
 let projectSearchQuery = "";
 let projectCategoryFilter = "All";
@@ -322,14 +323,19 @@ function openProjectFormModal(projectToEdit = null, onSaved = null) {
           </div>
         </div>
         <div class="form-section-body">
-          <div class="form-group">
-            <label class="form-label" for="proj-thumbnail">Main Thumbnail Image URL</label>
-            <input type="text" class="form-input" id="proj-thumbnail" value="${escapeHtml(project.thumbnail)}" placeholder="https://... or copy asset URL from Media Library" />
-          </div>
+          ${renderImageUploader({
+            id: "proj-thumbnail",
+            value: project.thumbnail,
+            label: "Main Cover / Thumbnail Image",
+            helperText: "Upload a game banner, poster, or cover screenshot from PC.",
+            placeholder: "https://... or upload from PC",
+            aspect: "16/9"
+          })}
 
-          <div class="form-group">
+          <div class="form-group" style="margin-top: var(--space-md);">
             <label class="form-label" for="proj-screenshots">Gallery Screenshots URLs (One URL per line or comma-separated)</label>
             <textarea class="form-textarea font-mono" id="proj-screenshots" rows="2" placeholder="https://.../screenshot1.png\nhttps://.../screenshot2.png">${escapeHtml((project.screenshots || []).join('\n'))}</textarea>
+            <span class="form-helper">Enter additional gameplay screenshot URLs for the interactive detail lightbox.</span>
           </div>
         </div>
       </div>
@@ -414,6 +420,9 @@ function openProjectFormModal(projectToEdit = null, onSaved = null) {
     onOpen: (modalEl) => {
       const cancelBtn = modalEl.querySelector("#modal-proj-cancel-btn");
       const saveBtn = modalEl.querySelector("#modal-save-proj-btn");
+
+      // Initialize Image Uploader for Project Thumbnail
+      initImageUploader(modalEl, "proj-thumbnail");
 
       cancelBtn.addEventListener("click", () => modal.close());
 

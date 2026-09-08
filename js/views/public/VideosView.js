@@ -6,8 +6,18 @@
 
 import { store } from "../../store/state.js";
 import { getIcon } from "../../utils/icons.js";
+import { extractYouTubeVideoId, getYouTubeThumbnailUrl } from "../../utils/youtube.js";
 
 let selectedVideoCategory = "All";
+
+function getVideoThumbnail(video) {
+  if (video.thumbnail && video.thumbnail.trim()) return video.thumbnail;
+  if (video.youtubeUrl) {
+    const videoId = extractYouTubeVideoId(video.youtubeUrl);
+    if (videoId) return getYouTubeThumbnailUrl(videoId, "high");
+  }
+  return "";
+}
 
 export function renderVideosView() {
   const allVideos = store.getVideos();
@@ -16,6 +26,7 @@ export function renderVideosView() {
   const categories = ["All", ...new Set(allVideos.map(v => v.category).filter(Boolean))];
 
   const featuredVideo = allVideos.find(v => v.isFeatured) || allVideos[0];
+  const featuredThumb = featuredVideo ? getVideoThumbnail(featuredVideo) : "";
 
   const filteredVideos = allVideos.filter(v => {
     return selectedVideoCategory === "All" || v.category === selectedVideoCategory;
@@ -30,34 +41,42 @@ export function renderVideosView() {
     </button>
   `).join("");
 
-  const renderVideoCard = (video, idx) => `
-    <article class="card card-hover reveal-card stagger-${(idx % 6) + 1}" id="video-card-${video.id}">
-      <div class="card-media">
-        ${video.thumbnail ? `
-          <img src="${video.thumbnail}" alt="${video.title} Thumbnail" loading="lazy" />
-        ` : `
-          <div class="card-media-placeholder">
-            ${getIcon("play", 24)}
-            <span>[ YouTube Thumbnail ]</span>
-          </div>
-        `}
-      </div>
-      <div class="card-body">
-        <div class="flex items-center justify-between gap-xs">
-          <span class="badge ${video.isFeatured ? 'badge-featured' : ''}">${video.category || 'Video'}</span>
-          <span class="text-xs text-muted font-mono">${video.views || '0 views'}</span>
+  const renderVideoCard = (video, idx) => {
+    const thumbUrl = getVideoThumbnail(video);
+    return `
+      <article class="card card-hover reveal-card stagger-${(idx % 6) + 1}" id="video-card-${video.id}">
+        <div class="card-media">
+          ${thumbUrl ? `
+            <img 
+              src="${thumbUrl}" 
+              alt="${video.title} Thumbnail" 
+              loading="lazy" 
+              onerror="this.onerror=null; if(this.src.includes('maxresdefault.jpg')) this.src=this.src.replace('maxresdefault.jpg', 'hqdefault.jpg');" 
+            />
+          ` : `
+            <div class="card-media-placeholder">
+              ${getIcon("play", 24)}
+              <span>[ YouTube Thumbnail ]</span>
+            </div>
+          `}
         </div>
-        <h3 style="font-size: var(--text-base); line-height: 1.4; margin-top: 4px;">${video.title}</h3>
-        <p style="font-size: var(--text-xs); line-height: 1.5; color: var(--text-muted); flex-grow: 1;">${video.description}</p>
-      </div>
-      <div class="card-footer">
-        <span class="text-xs text-muted font-mono">${video.uploadDate || 'Recent'}</span>
-        <a href="${video.youtubeUrl || '#'}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">
-          Watch on YouTube ↗
-        </a>
-      </div>
-    </article>
-  `;
+        <div class="card-body">
+          <div class="flex items-center justify-between gap-xs">
+            <span class="badge ${video.isFeatured ? 'badge-featured' : ''}">${video.category || 'Video'}</span>
+            <span class="text-xs text-muted font-mono">${video.views || '0 views'}</span>
+          </div>
+          <h3 style="font-size: var(--text-base); line-height: 1.4; margin-top: 4px;">${video.title}</h3>
+          <p style="font-size: var(--text-xs); line-height: 1.5; color: var(--text-muted); flex-grow: 1;">${video.description}</p>
+        </div>
+        <div class="card-footer">
+          <span class="text-xs text-muted font-mono">${video.uploadDate || 'Recent'}</span>
+          <a href="${video.youtubeUrl || '#'}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">
+            Watch on YouTube ↗
+          </a>
+        </div>
+      </article>
+    `;
+  };
 
   return `
     <div class="videos-page-root">
@@ -80,8 +99,13 @@ export function renderVideosView() {
           ${featuredVideo ? `
             <div class="featured-video-spotlight reveal-init stagger-1">
               <div class="featured-video-media">
-                ${featuredVideo.thumbnail ? `
-                  <img src="${featuredVideo.thumbnail}" alt="${featuredVideo.title}" style="width:100%; height:100%; object-fit:cover;" />
+                ${featuredThumb ? `
+                  <img 
+                    src="${featuredThumb}" 
+                    alt="${featuredVideo.title}" 
+                    style="width:100%; height:100%; object-fit:cover;" 
+                    onerror="this.onerror=null; if(this.src.includes('maxresdefault.jpg')) this.src=this.src.replace('maxresdefault.jpg', 'hqdefault.jpg');"
+                  />
                 ` : `
                   <div class="card-media-placeholder">
                     <div style="color: var(--accent-primary); margin-bottom: 8px;">${getIcon("play", 40)}</div>

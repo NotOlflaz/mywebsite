@@ -7,6 +7,7 @@ import { store } from "../../store/state.js";
 import { modal } from "../../components/Modal.js";
 import { toast } from "../../components/Toast.js";
 import { getIcon } from "../../utils/icons.js";
+import { renderImageUploader, initImageUploader } from "../../components/ImageUploader.js";
 
 let mediaSearchQuery = "";
 
@@ -164,18 +165,22 @@ function openAddMediaModal(onSaved) {
       <div class="form-section">
         <div class="form-section-header">
           <div class="form-section-title">
-            <span>Asset Information</span>
+            <span>Asset Upload & Details</span>
           </div>
         </div>
         <div class="form-section-body">
-          <div class="form-group">
-            <label class="form-label" for="media-name">Asset Name *</label>
-            <input type="text" class="form-input" id="media-name" required placeholder="e.g. shadow-leap-gameplay.png" />
-          </div>
+          ${renderImageUploader({
+            id: "media-url",
+            value: "",
+            label: "Image / Asset File *",
+            helperText: "Upload from PC (PNG, JPG, WEBP, GIF) or paste an image URL.",
+            placeholder: "https://... or images/screenshot.png",
+            aspect: "16/9"
+          })}
 
-          <div class="form-group">
-            <label class="form-label" for="media-url">Image URL or Local Asset Path *</label>
-            <input type="text" class="form-input" id="media-url" required placeholder="https://... or images/screenshot.png" />
+          <div class="form-group" style="margin-top: var(--space-md);">
+            <label class="form-label" for="media-name">Asset Name / Title *</label>
+            <input type="text" class="form-input" id="media-name" required placeholder="e.g. shadow-leap-gameplay.png" />
           </div>
 
           <div class="form-row">
@@ -204,6 +209,23 @@ function openAddMediaModal(onSaved) {
     bodyHtml,
     footerHtml,
     onOpen: (modalEl) => {
+      const nameInput = modalEl.querySelector("#media-name");
+      const sizeInput = modalEl.querySelector("#media-size");
+
+      // Initialize ImageUploader with automatic name and size filling
+      initImageUploader(modalEl, "media-url", {
+        onChange: (val, meta) => {
+          if (meta) {
+            if (meta.name && nameInput && (!nameInput.value.trim() || nameInput.value === "image.png")) {
+              nameInput.value = meta.name;
+            }
+            if (meta.size && sizeInput) {
+              sizeInput.value = meta.size;
+            }
+          }
+        }
+      });
+
       modalEl.querySelector("#modal-media-cancel-btn").addEventListener("click", () => modal.close());
       const saveBtn = modalEl.querySelector("#modal-media-save-btn");
 
@@ -214,7 +236,7 @@ function openAddMediaModal(onSaved) {
         const size = modalEl.querySelector("#media-size").value.trim() || "Unknown";
 
         if (!name || !url) {
-          toast.error("Asset name and URL are required");
+          toast.error("Please upload an image or provide a valid URL, and enter an asset name.");
           return;
         }
 
