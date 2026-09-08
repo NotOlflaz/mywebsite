@@ -33,8 +33,12 @@ if ($status) {
     Write-Host "2. No new local changes to commit." -ForegroundColor Yellow
 }
 
-# 3. Push to GitHub
-Write-Host "3. Pushing to origin/main..." -ForegroundColor Cyan
+# 3. Pull latest remote changes with rebase
+Write-Host "3. Syncing with remote origin/main..." -ForegroundColor Gray
+& $gitExe pull --rebase origin main
+
+# 4. Push to GitHub
+Write-Host "4. Pushing to origin/main..." -ForegroundColor Cyan
 & $gitExe push -u origin main
 
 if ($LASTEXITCODE -eq 0) {
@@ -42,3 +46,4 @@ if ($LASTEXITCODE -eq 0) {
 } else {
     Write-Host "Push failed or requires GitHub authentication token." -ForegroundColor Red
 }
+
