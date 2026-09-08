@@ -108,144 +108,162 @@ class StateStore {
   applyAppearanceTokens() {
     if (typeof document === "undefined") return;
     const root = document.documentElement;
-    const app = this.getAppearance();
+    const app = this.getAppearance() || {};
+
+    const toPx = (v, fallback = "") => {
+      if (v === undefined || v === null || v === "") return fallback;
+      if (typeof v === "number") return `${v}px`;
+      if (typeof v === "string") {
+        if (/^\d+(\.\d+)?$/.test(v.trim())) return `${v.trim()}px`;
+        return v;
+      }
+      return fallback;
+    };
+
+    const toMs = (v, fallback = "") => {
+      if (v === undefined || v === null || v === "") return fallback;
+      if (typeof v === "number") return `${v}ms`;
+      if (typeof v === "string") {
+        if (/^\d+(\.\d+)?$/.test(v.trim())) return `${v.trim()}ms`;
+        return v;
+      }
+      return fallback;
+    };
 
     // 1. DATA ATTRIBUTES FOR PRESETS & MODES
     root.setAttribute("data-theme", app.themePreset || "default");
-    root.setAttribute("data-glow", app.glowGlobalPreset || "subtle");
+    root.setAttribute("data-glow", app.glowLevel || app.glowGlobalPreset || "subtle");
+    root.setAttribute("data-pattern", app.bgPattern || "none");
+    if (app.scrollRevealEnabled === false) {
+      root.setAttribute("data-scroll-reveal", "false");
+    } else {
+      root.removeAttribute("data-scroll-reveal");
+    }
+    if (app.hoverAnimationsEnabled === false) {
+      root.setAttribute("data-hover-anim", "false");
+    } else {
+      root.removeAttribute("data-hover-anim");
+    }
 
     // 2. CORE & ACCENT COLORS
-    if (app.accentPrimaryHex) {
-      root.style.setProperty("--accent-primary", app.accentPrimaryHex);
-      root.style.setProperty("--accent-text", app.accentPrimaryHex);
-      root.style.setProperty("--border-focus", app.accentPrimaryHex);
-      root.style.setProperty("--accent-surface", `${app.accentPrimaryHex}${Math.round(parseFloat(app.accentSurfaceOpacity || 0.06) * 255).toString(16).padStart(2, '0')}`);
-      root.style.setProperty("--accent-border", `${app.accentPrimaryHex}${Math.round(parseFloat(app.accentBorderOpacity || 0.22) * 255).toString(16).padStart(2, '0')}`);
+    const accentPrimary = app.accentPrimary || app.accentPrimaryHex;
+    if (accentPrimary) {
+      root.style.setProperty("--accent-primary", accentPrimary);
+      root.style.setProperty("--accent-text", accentPrimary);
+      root.style.setProperty("--border-focus", accentPrimary);
+      root.style.setProperty("--accent-surface", `${accentPrimary}10`);
+      root.style.setProperty("--accent-border", `${accentPrimary}38`);
     }
-    if (app.accentSecondaryHex) root.style.setProperty("--accent-secondary", app.accentSecondaryHex);
-    if (app.accentHoverHex) root.style.setProperty("--accent-hover", app.accentHoverHex);
-    if (app.accentActiveHex) root.style.setProperty("--accent-active", app.accentActiveHex);
+
+    const accentSecondary = app.accentSecondary || app.accentSecondaryHex;
+    if (accentSecondary) root.style.setProperty("--accent-secondary", accentSecondary);
+
+    const accentHover = app.accentHover || app.accentHoverHex;
+    if (accentHover) root.style.setProperty("--accent-hover", accentHover);
+
+    const accentActive = app.accentActive || app.accentActiveHex;
+    if (accentActive) root.style.setProperty("--accent-active", accentActive);
 
     if (app.bgPage) root.style.setProperty("--bg-page", app.bgPage);
     if (app.bgPageAlt) root.style.setProperty("--bg-page-alt", app.bgPageAlt);
     if (app.bgSurface) root.style.setProperty("--bg-surface", app.bgSurface);
-    if (app.bgCard) root.style.setProperty("--bg-card", app.bgCard);
     if (app.bgSurfaceAlt) root.style.setProperty("--bg-surface-alt", app.bgSurfaceAlt);
     if (app.bgSurfaceElevated) root.style.setProperty("--bg-surface-elevated", app.bgSurfaceElevated);
 
     if (app.borderColor) root.style.setProperty("--border-color", app.borderColor);
     if (app.borderSubtle) root.style.setProperty("--border-subtle", app.borderSubtle);
     if (app.borderHover) root.style.setProperty("--border-hover", app.borderHover);
-    if (app.borderDivider) root.style.setProperty("--border-divider", app.borderDivider);
 
     // 3. TEXT HIERARCHY
-    if (app.textHeading) root.style.setProperty("--text-heading", app.textHeading);
-    if (app.textHeadingSecondary) root.style.setProperty("--text-heading-secondary", app.textHeadingSecondary);
+    if (app.headingMainColor) root.style.setProperty("--heading-main-color", app.headingMainColor);
+    if (app.headingSecondaryColor) root.style.setProperty("--heading-secondary-color", app.headingSecondaryColor);
     if (app.textMain) root.style.setProperty("--text-main", app.textMain);
     if (app.textMuted) root.style.setProperty("--text-muted", app.textMuted);
     if (app.textLight) root.style.setProperty("--text-light", app.textLight);
+    if (app.textDisabled) root.style.setProperty("--text-disabled", app.textDisabled);
     if (app.textLink) root.style.setProperty("--text-link", app.textLink);
-    if (app.textInverse) root.style.setProperty("--text-inverse", app.textInverse);
 
     // 4. BUTTONS & INPUTS
-    if (app.btnPrimaryBg) root.style.setProperty("--btn-primary-bg", app.btnPrimaryBg);
-    if (app.btnPrimaryText) root.style.setProperty("--btn-primary-text", app.btnPrimaryText);
-    if (app.btnPrimaryHoverBg) root.style.setProperty("--btn-primary-hover-bg", app.btnPrimaryHoverBg);
-    if (app.btnSecondaryBg) root.style.setProperty("--btn-secondary-bg", app.btnSecondaryBg);
-    if (app.btnSecondaryText) root.style.setProperty("--btn-secondary-text", app.btnSecondaryText);
-    if (app.btnSecondaryBorder) root.style.setProperty("--btn-secondary-border", app.btnSecondaryBorder);
-    if (app.btnBorderRadius) root.style.setProperty("--btn-radius", app.btnBorderRadius);
-    if (app.btnPaddingY) root.style.setProperty("--btn-padding-y", app.btnPaddingY);
-    if (app.btnPaddingX) root.style.setProperty("--btn-padding-x", app.btnPaddingX);
-    if (app.btnHoverLift) root.style.setProperty("--btn-hover-lift", `-${app.btnHoverLift}`);
+    if (app.btnBg || app.btnPrimaryBg) root.style.setProperty("--btn-bg", app.btnBg || app.btnPrimaryBg);
+    if (app.btnText || app.btnPrimaryText) root.style.setProperty("--btn-text", app.btnText || app.btnPrimaryText);
+    if (app.btnHoverBg || app.btnPrimaryHoverBg) root.style.setProperty("--btn-hover-bg", app.btnHoverBg || app.btnPrimaryHoverBg);
+    if (app.btnRadius || app.btnBorderRadius) root.style.setProperty("--btn-radius", toPx(app.btnRadius || app.btnBorderRadius, "6px"));
+    if (app.btnBorderWidth) root.style.setProperty("--btn-border-width", toPx(app.btnBorderWidth, "1px"));
+    if (app.btnHoverLift) root.style.setProperty("--btn-hover-lift", toPx(app.btnHoverLift, "2px"));
     if (app.btnHoverScale) root.style.setProperty("--btn-hover-scale", app.btnHoverScale);
     if (app.btnActiveScale) root.style.setProperty("--btn-active-scale", app.btnActiveScale);
-    if (app.btnTransitionSpeed) root.style.setProperty("--btn-transition-speed", app.btnTransitionSpeed);
+    if (app.btnTransitionSpeed) root.style.setProperty("--btn-transition-speed", toMs(app.btnTransitionSpeed, "140ms"));
 
     if (app.inputBg) root.style.setProperty("--input-bg", app.inputBg);
     if (app.inputBorder) root.style.setProperty("--input-border", app.inputBorder);
-    if (app.inputFocus) root.style.setProperty("--input-focus", app.inputFocus);
+    if (app.inputFocusBorder || app.inputFocus) root.style.setProperty("--input-focus-border", app.inputFocusBorder || app.inputFocus);
     if (app.badgeBg) root.style.setProperty("--badge-bg", app.badgeBg);
     if (app.badgeText) root.style.setProperty("--badge-text", app.badgeText);
 
     // 5. CARDS & ELEVATIONS
     if (app.cardBg) root.style.setProperty("--card-bg", app.cardBg);
-    if (app.cardBorderRadius) root.style.setProperty("--card-radius", app.cardBorderRadius);
-    if (app.cardBorderColor) root.style.setProperty("--card-border-color", app.cardBorderColor);
-    if (app.cardBorderWidth) root.style.setProperty("--card-border-width", app.cardBorderWidth);
-    if (app.cardHoverLift) root.style.setProperty("--card-hover-lift", `-${app.cardHoverLift}`);
+    if (app.cardProjectBg) root.style.setProperty("--card-project-bg", app.cardProjectBg);
+    if (app.cardVideoBg) root.style.setProperty("--card-video-bg", app.cardVideoBg);
+    if (app.cardPortfolioBg) root.style.setProperty("--card-portfolio-bg", app.cardPortfolioBg);
+    if (app.cardFeaturedBg) root.style.setProperty("--card-featured-bg", app.cardFeaturedBg);
+    if (app.cardRadius || app.cardBorderRadius) root.style.setProperty("--card-radius", toPx(app.cardRadius || app.cardBorderRadius, "10px"));
+    if (app.cardBorder || app.cardBorderColor) root.style.setProperty("--card-border", app.cardBorder || app.cardBorderColor);
+    if (app.cardBorderWidth) root.style.setProperty("--card-border-width", toPx(app.cardBorderWidth, "1px"));
+    if (app.cardOpacity) root.style.setProperty("--card-opacity", app.cardOpacity);
+    if (app.cardHoverLift) root.style.setProperty("--card-hover-lift", toPx(app.cardHoverLift, "3px"));
     if (app.cardHoverScale) root.style.setProperty("--card-hover-scale", app.cardHoverScale);
     if (app.cardImageZoom) root.style.setProperty("--card-image-zoom", app.cardImageZoom);
 
     // 6. TYPOGRAPHY
-    if (app.fontHeadingWeight) root.style.setProperty("--font-weight-heading", app.fontHeadingWeight);
-    if (app.heroHeadingSize) root.style.setProperty("--hero-heading-size", app.heroHeadingSize);
-    if (app.heroHeadingWeight) root.style.setProperty("--hero-heading-weight", app.heroHeadingWeight);
-    if (app.heroHeadingColor) root.style.setProperty("--hero-heading-color", app.heroHeadingColor);
-    if (app.heroHeadingLetterSpacing) root.style.setProperty("--hero-heading-spacing", app.heroHeadingLetterSpacing);
-    if (app.heroHeadingLineHeight) root.style.setProperty("--hero-heading-line-height", app.heroHeadingLineHeight);
-
-    if (app.sectionHeadingSize) root.style.setProperty("--section-heading-size", app.sectionHeadingSize);
-    if (app.sectionHeadingWeight) root.style.setProperty("--section-heading-weight", app.sectionHeadingWeight);
-    if (app.sectionHeadingColor) root.style.setProperty("--section-heading-color", app.sectionHeadingColor);
-    if (app.sectionHeadingLetterSpacing) root.style.setProperty("--section-heading-spacing", app.sectionHeadingLetterSpacing);
-
-    if (app.cardHeadingSize) root.style.setProperty("--card-heading-size", app.cardHeadingSize);
-    if (app.cardHeadingWeight) root.style.setProperty("--card-heading-weight", app.cardHeadingWeight);
-    if (app.cardHeadingColor) root.style.setProperty("--card-heading-color", app.cardHeadingColor);
-
-    if (app.bodyTextSize) root.style.setProperty("--body-text-size", app.bodyTextSize);
-    if (app.bodyTextWeight) root.style.setProperty("--body-text-weight", app.bodyTextWeight);
-    if (app.bodyTextColor) root.style.setProperty("--body-text-color", app.bodyTextColor);
+    if (app.heroFontSize || app.heroHeadingSize) root.style.setProperty("--hero-font-size", toPx(app.heroFontSize || app.heroHeadingSize, "2.75rem"));
+    if (app.heroFontWeight || app.heroHeadingWeight) root.style.setProperty("--hero-font-weight", app.heroFontWeight || app.heroHeadingWeight);
+    if (app.sectionFontSize || app.sectionHeadingSize) root.style.setProperty("--section-font-size", toPx(app.sectionFontSize || app.sectionHeadingSize, "1.5rem"));
+    if (app.sectionFontWeight || app.sectionHeadingWeight) root.style.setProperty("--section-font-weight", app.sectionFontWeight || app.sectionHeadingWeight);
+    if (app.cardTitleSize || app.cardHeadingSize) root.style.setProperty("--card-title-size", toPx(app.cardTitleSize || app.cardHeadingSize, "1.25rem"));
+    if (app.bodyFontSize || app.bodyTextSize) root.style.setProperty("--body-font-size", toPx(app.bodyFontSize || app.bodyTextSize, "1rem"));
     if (app.bodyLineHeight) root.style.setProperty("--body-line-height", app.bodyLineHeight);
-    if (app.bodyLetterSpacing) root.style.setProperty("--body-letter-spacing", app.bodyLetterSpacing);
-
-    if (app.mutedTextColor) root.style.setProperty("--muted-text-color", app.mutedTextColor);
-    if (app.mutedTextOpacity) root.style.setProperty("--muted-text-opacity", app.mutedTextOpacity);
 
     // 7. LAYOUT & SPACING
-    if (app.containerMaxWidth) root.style.setProperty("--container-max-width", app.containerMaxWidth);
-    if (app.sectionSpacing) root.style.setProperty("--section-spacing", app.sectionSpacing);
-    if (app.sectionPaddingY) root.style.setProperty("--section-padding-y", app.sectionPaddingY);
-    if (app.gridGap) root.style.setProperty("--grid-gap", app.gridGap);
-    if (app.cardGap) root.style.setProperty("--card-gap", app.cardGap);
-    if (app.navbarHeight) root.style.setProperty("--navbar-height", app.navbarHeight);
-    if (app.containerPaddingX) root.style.setProperty("--container-padding-x", app.containerPaddingX);
+    if (app.containerMaxWidth) root.style.setProperty("--container-max-width", toPx(app.containerMaxWidth, "1200px"));
+    if (app.sectionPaddingY) root.style.setProperty("--section-padding-y", toPx(app.sectionPaddingY, "64px"));
+    if (app.gridGap) root.style.setProperty("--grid-gap", toPx(app.gridGap, "24px"));
+    if (app.containerPaddingX) root.style.setProperty("--container-padding-x", toPx(app.containerPaddingX, "24px"));
 
     // 8. NAVBAR & FOOTER
-    if (app.navbarBg) root.style.setProperty("--navbar-bg", app.navbarBg);
-    if (app.navbarBgOpacity) root.style.setProperty("--navbar-opacity", app.navbarBgOpacity);
-    if (app.navbarBackdropBlur) root.style.setProperty("--navbar-blur", app.navbarBackdropBlur);
-    if (app.navbarLogoSize) root.style.setProperty("--navbar-logo-size", app.navbarLogoSize);
-    if (app.navbarTextColor) root.style.setProperty("--navbar-text-color", app.navbarTextColor);
-    if (app.navbarActiveColor) root.style.setProperty("--navbar-active-color", app.navbarActiveColor);
-    if (app.navbarHoverColor) root.style.setProperty("--navbar-hover-color", app.navbarHoverColor);
+    if (app.navBg || app.navbarBg) root.style.setProperty("--nav-bg", app.navBg || app.navbarBg);
+    if (app.navBgOpacity !== undefined || app.navbarBgOpacity !== undefined) root.style.setProperty("--nav-bg-opacity", app.navBgOpacity !== undefined ? app.navBgOpacity : app.navbarBgOpacity);
+    if (app.navBlur !== undefined || app.navbarBackdropBlur !== undefined) root.style.setProperty("--nav-blur", toPx(app.navBlur !== undefined ? app.navBlur : app.navbarBackdropBlur, "12px"));
+    if (app.navBorderOpacity !== undefined || app.navbarBorderOpacity !== undefined) root.style.setProperty("--nav-border-opacity", app.navBorderOpacity !== undefined ? app.navBorderOpacity : app.navbarBorderOpacity);
+    if (app.navHeight || app.navbarHeight) root.style.setProperty("--nav-height", toPx(app.navHeight || app.navbarHeight, "64px"));
+    if (app.navLogoSize || app.navbarLogoSize) root.style.setProperty("--nav-logo-size", toPx(app.navLogoSize || app.navbarLogoSize, "18px"));
+    if (app.navTextColor || app.navbarTextColor) root.style.setProperty("--nav-text-color", app.navTextColor || app.navbarTextColor);
+    if (app.navActiveColor || app.navbarActiveColor) root.style.setProperty("--nav-active-color", app.navActiveColor || app.navbarActiveColor);
+    if (app.navHoverColor || app.navbarHoverColor) root.style.setProperty("--nav-hover-color", app.navHoverColor || app.navbarHoverColor);
 
     if (app.footerBg) root.style.setProperty("--footer-bg", app.footerBg);
-    if (app.footerBorderColor) root.style.setProperty("--footer-border-color", app.footerBorderColor);
+    if (app.footerBorder || app.footerBorderColor) root.style.setProperty("--footer-border", app.footerBorder || app.footerBorderColor);
     if (app.footerHeadingColor) root.style.setProperty("--footer-heading-color", app.footerHeadingColor);
     if (app.footerTextColor) root.style.setProperty("--footer-text-color", app.footerTextColor);
     if (app.footerMutedColor) root.style.setProperty("--footer-muted-color", app.footerMutedColor);
     if (app.footerLinkColor) root.style.setProperty("--footer-link-color", app.footerLinkColor);
     if (app.footerAccentColor) root.style.setProperty("--footer-accent-color", app.footerAccentColor);
-    if (app.footerSpacing) root.style.setProperty("--footer-spacing", app.footerSpacing);
+    if (app.footerSpacingY || app.footerSpacing) root.style.setProperty("--footer-spacing-y", toPx(app.footerSpacingY || app.footerSpacing, "48px"));
 
     // 9. ANIMATIONS & SCROLL ENGINE
-    if (app.scrollSlideDistance) root.style.setProperty("--scroll-slide-distance", app.scrollSlideDistance);
-    if (app.scrollDuration) root.style.setProperty("--scroll-duration", app.scrollDuration);
-    if (app.scrollEasing) root.style.setProperty("--scroll-ease", app.scrollEasing);
-    if (app.hoverLiftDistance) root.style.setProperty("--hover-lift", `-${app.hoverLiftDistance}`);
-    if (app.hoverScaleAmount) root.style.setProperty("--hover-scale", app.hoverScaleAmount);
-    if (app.hoverTransitionSpeed) root.style.setProperty("--hover-transition-speed", app.hoverTransitionSpeed);
+    if (app.scrollSlideDistance) root.style.setProperty("--scroll-slide-dist", toPx(app.scrollSlideDistance, "80px"));
+    if (app.scrollDuration) root.style.setProperty("--scroll-duration", toMs(app.scrollDuration, "800ms"));
+    if (app.scrollEasing) root.style.setProperty("--scroll-easing", app.scrollEasing);
+    if (app.animHoverLift || app.hoverLiftDistance) root.style.setProperty("--anim-hover-lift", toPx(app.animHoverLift || app.hoverLiftDistance, "6px"));
+    if (app.animHoverScale || app.hoverScaleAmount) root.style.setProperty("--anim-hover-scale", app.animHoverScale || app.hoverScaleAmount);
+    if (app.animTransitionSpeed || app.hoverTransitionSpeed) root.style.setProperty("--anim-transition-speed", toMs(app.animTransitionSpeed || app.hoverTransitionSpeed, "250ms"));
 
     // 10. SCROLL PROGRESS INDICATOR
-    if (app.scrollProgressColor) root.style.setProperty("--scroll-bar-color", app.scrollProgressColor);
-    if (app.scrollProgressWidth) root.style.setProperty("--scroll-bar-width", app.scrollProgressWidth);
-    if (app.scrollProgressOpacity) root.style.setProperty("--scroll-bar-opacity", app.scrollProgressOpacity);
-    if (app.scrollProgressGlow) root.style.setProperty("--scroll-bar-glow", app.scrollProgressGlow);
-    if (app.scrollProgressRight) root.style.setProperty("--scroll-bar-right", app.scrollProgressRight);
-    if (app.scrollProgressBorderRadius) root.style.setProperty("--scroll-bar-radius", app.scrollProgressBorderRadius);
-    if (app.scrollProgressTransitionSpeed) root.style.setProperty("--scroll-bar-transition-speed", app.scrollProgressTransitionSpeed);
+    if (app.scrollProgressColor) root.style.setProperty("--progress-color", app.scrollProgressColor);
+    if (app.scrollProgressGlow) root.style.setProperty("--progress-glow", app.scrollProgressGlow);
+    if (app.scrollProgressWidth) root.style.setProperty("--progress-width", toPx(app.scrollProgressWidth, "3px"));
+    if (app.scrollProgressHeight) root.style.setProperty("--progress-height", toPx(app.scrollProgressHeight, "180px"));
+    if (app.scrollProgressRight !== undefined) root.style.setProperty("--progress-right", toPx(app.scrollProgressRight, "10px"));
+    if (app.scrollProgressOpacity !== undefined) root.style.setProperty("--progress-opacity", app.scrollProgressOpacity);
 
     // 11. DYNAMIC DOM RENDER: AMBIENT BACKDROP & DECORATIVE SHAPES
     this.renderDynamicAtmosphere(app);

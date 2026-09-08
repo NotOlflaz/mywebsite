@@ -106,15 +106,14 @@ export function renderAdminLayout(contentHtml, activeAdminRoute = "#/admin", bre
             </div>
           </div>
 
-            <a href="#/" target="_blank" class="btn btn-outline btn-sm btn-block" title="Open live public website in new tab">
-              ${getIcon("external", 14)}
-              <span>Preview Site ↗</span>
-            </a>
-            <button id="admin-logout-btn" class="btn btn-outline btn-sm btn-block admin-logout-btn" title="Sign out of Admin CMS">
-              ${getIcon("logOut", 14)}
-              <span>Sign Out</span>
-            </button>
-          </div>
+          <a href="#/" target="_blank" class="btn btn-outline btn-sm btn-block" title="Open live public website in new tab">
+            ${getIcon("external", 14)}
+            <span>Preview Site ↗</span>
+          </a>
+          <button id="admin-logout-btn" class="btn btn-outline btn-sm btn-block admin-logout-btn" title="Sign out of Admin CMS">
+            ${getIcon("logOut", 14)}
+            <span>Sign Out</span>
+          </button>
         </div>
       </aside>
 
