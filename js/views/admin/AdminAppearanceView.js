@@ -23,7 +23,8 @@ function escapeHtml(str) {
    ========================================================================== */
 
 function renderColorRow(label, sublabel, pickerId, hexId, value, defaultVal) {
-  const val = value || defaultVal || "#ffffff";
+  const rawVal = value !== undefined && value !== null ? String(value) : (defaultVal || "#ffffff");
+  const val = String(rawVal);
   return `
     <div class="theme-color-row" data-color-control="${pickerId}">
       <div>
@@ -42,13 +43,14 @@ function renderColorRow(label, sublabel, pickerId, hexId, value, defaultVal) {
 }
 
 function renderSliderRow(label, inputId, valId, value, min, max, step, unit = "") {
+  const numericVal = (value !== undefined && value !== null && !isNaN(parseFloat(value))) ? parseFloat(value) : min;
   return `
     <div class="theme-slider-group">
       <div class="theme-slider-header">
         <span style="font-weight: 600; color: var(--text-main);">${label}</span>
-        <span class="theme-slider-val" id="${valId}">${value}${unit}</span>
+        <span class="theme-slider-val" id="${valId}">${numericVal}${unit}</span>
       </div>
-      <input type="range" class="theme-slider-input" id="${inputId}" min="${min}" max="${max}" step="${step}" value="${value}" data-unit="${unit}" data-val-id="${valId}" />
+      <input type="range" class="theme-slider-input" id="${inputId}" min="${min}" max="${max}" step="${step}" value="${numericVal}" data-unit="${unit}" data-val-id="${valId}" />
     </div>
   `;
 }
@@ -248,7 +250,7 @@ export function renderAdminAppearanceView() {
                   <strong style="font-size: var(--text-sm); color: var(--text-main);">${preset.name}</strong>
                   <div style="width: 14px; height: 14px; border-radius: 50%; background: ${preset.accentPrimary || '#38bdf8'}; box-shadow: 0 0 8px ${preset.accentPrimary || '#38bdf8'};"></div>
                 </div>
-                <p class="text-xs text-muted" style="margin: 0; line-height: 1.5;">${preset.description}</p>
+                <p class="text-xs text-muted" style="margin: 0; line-height: 1.5;">${preset.description || preset.desc || ''}</p>
                 <button type="button" class="btn btn-secondary btn-sm" style="margin-top: 8px; width: 100%;">
                   Apply Preset
                 </button>

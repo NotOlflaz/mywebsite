@@ -384,6 +384,10 @@ class StateStore {
     return this.state;
   }
 
+  getPresets() {
+    return THEME_PRESETS;
+  }
+
   getAppearance() {
     return this.state.appearance || initialData.appearance;
   }
