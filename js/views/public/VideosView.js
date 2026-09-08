@@ -1,7 +1,7 @@
 /**
  * Videos Page View
- * Features: Featured Video Spotlight, Category Filters, Best/Popular Videos, Latest Videos,
- * Reusable video cards with YouTube watch links.
+ * Features: Featured Video Spotlight, Category Filters, Published-only filtering,
+ * Reusable video cards with YouTube watch links, and intelligent empty states.
  */
 
 import { store } from "../../store/state.js";
@@ -20,7 +20,7 @@ function getVideoThumbnail(video) {
 }
 
 export function renderVideosView() {
-  const allVideos = store.getVideos();
+  const allVideos = store.getPublishedVideos();
   const social = store.getSocialLinks();
 
   const categories = ["All", ...new Set(allVideos.map(v => v.category).filter(Boolean))];
@@ -78,6 +78,31 @@ export function renderVideosView() {
     `;
   };
 
+  let videosContentHtml = "";
+  if (allVideos.length === 0) {
+    videosContentHtml = `
+      <div style="grid-column: 1 / -1; text-align: center; padding: var(--space-3xl); background: var(--bg-surface); border: 1px dashed var(--border-color); border-radius: var(--radius-md);">
+        <div class="empty-state-icon" style="color: var(--accent-primary);">${getIcon("videos", 36)}</div>
+        <h3 style="margin-top: 12px; font-size: var(--text-xl);">Videos Coming Soon</h3>
+        <p style="margin-top: 6px; color: var(--text-muted); max-width: 500px; margin-left: auto; margin-right: auto;">
+          New Godot tutorials, devlogs, and Minecraft challenge videos are being prepared. Subscribe on YouTube to stay tuned!
+        </p>
+        <a href="${social.youtube || '#'}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm" style="margin-top: 16px;">
+          Visit YouTube Channel ↗
+        </a>
+      </div>
+    `;
+  } else if (filteredVideos.length === 0) {
+    videosContentHtml = `
+      <div style="grid-column: 1 / -1; text-align: center; padding: var(--space-2xl); background: var(--bg-surface); border: 1px dashed var(--border-color); border-radius: var(--radius-md);">
+        <div class="empty-state-icon">${getIcon("videos", 32)}</div>
+        <p style="margin-top: 8px;">No videos found in this category.</p>
+      </div>
+    `;
+  } else {
+    videosContentHtml = filteredVideos.map((v, i) => renderVideoCard(v, i)).join("");
+  }
+
   return `
     <div class="videos-page-root">
       <section class="section" style="padding-top: var(--space-2xl);">
@@ -95,8 +120,8 @@ export function renderVideosView() {
             </a>
           </div>
 
-          <!-- Featured Spotlight Video -->
-          ${featuredVideo ? `
+          <!-- Featured Spotlight Video (only if more than 1 video or active) -->
+          ${featuredVideo && allVideos.length > 1 ? `
             <div class="featured-video-spotlight reveal-init stagger-1">
               <div class="featured-video-media">
                 ${featuredThumb ? `
@@ -138,18 +163,15 @@ export function renderVideosView() {
           ` : ''}
 
           <!-- Category Tabs -->
-          <div class="tabs reveal-init stagger-1" style="margin-bottom: var(--space-xl);">
-            ${categoriesHtml}
-          </div>
+          ${categories.length > 2 ? `
+            <div class="tabs reveal-init stagger-1" style="margin-bottom: var(--space-xl);">
+              ${categoriesHtml}
+            </div>
+          ` : ''}
 
           <!-- Latest & Filtered Videos Grid -->
           <div class="grid grid-cols-3 gap-lg scroll-reveal-grid">
-            ${filteredVideos.length > 0 ? filteredVideos.map((v, i) => renderVideoCard(v, i)).join("") : `
-              <div style="grid-column: 1 / -1; text-align: center; padding: var(--space-2xl); background: var(--bg-surface); border: 1px dashed var(--border-color); border-radius: var(--radius-md);">
-                <div class="empty-state-icon">${getIcon("videos", 32)}</div>
-                <p style="margin-top: 8px;">No videos found in this category.</p>
-              </div>
-            `}
+            ${videosContentHtml}
           </div>
 
         </div>
@@ -167,3 +189,4 @@ export function initVideosViewEvents(reRenderCallback) {
     });
   });
 }
+

@@ -157,7 +157,12 @@ export function renderAdminDashboardView() {
                     ${projects.map(p => `
                       <tr>
                         <td>
-                          <strong style="color: var(--text-main);">${p.title}</strong>
+                          <div class="flex items-center gap-xs">
+                            <strong style="color: var(--text-main);">${p.title}</strong>
+                            <span class="badge ${p.publishStatus === 'draft' ? 'badge-draft' : 'badge-published'}" style="font-size: 10px; padding: 1px 6px;">
+                              ${p.publishStatus === 'draft' ? 'Draft' : 'Live'}
+                            </span>
+                          </div>
                           <div class="font-mono text-xs text-muted">${p.engine}</div>
                         </td>
                         <td><span class="badge">${p.category}</span></td>
@@ -201,7 +206,12 @@ export function renderAdminDashboardView() {
                     ${videos.map(v => `
                       <tr>
                         <td>
-                          <strong style="color: var(--text-main);">${v.title}</strong>
+                          <div class="flex items-center gap-xs">
+                            <strong style="color: var(--text-main);">${v.title}</strong>
+                            <span class="badge ${v.publishStatus === 'draft' ? 'badge-draft' : 'badge-published'}" style="font-size: 10px; padding: 1px 6px;">
+                              ${v.publishStatus === 'draft' ? 'Draft' : 'Live'}
+                            </span>
+                          </div>
                           <div class="text-xs text-muted font-mono">${v.uploadDate}</div>
                         </td>
                         <td><span class="badge">${v.category}</span></td>

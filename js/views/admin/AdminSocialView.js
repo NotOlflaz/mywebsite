@@ -16,6 +16,9 @@ export function renderAdminSocialView() {
           <h1>Social Links & Community Hubs</h1>
           <p>Configure links to your YouTube channel, Discord community server, GitHub repositories, and game storefronts.</p>
         </div>
+        <a href="#/" target="_blank" class="btn btn-secondary btn-sm">
+          <span>Preview Site ↗</span>
+        </a>
       </div>
 
       <form id="admin-social-form" style="max-width: 900px;">

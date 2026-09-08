@@ -81,10 +81,10 @@ export function renderFooter() {
         <!-- Bottom Bar -->
         <div class="footer-bottom">
           <div>
-            &copy; ${currentYear} ${settings.siteName || 'Olflaz'}. All rights reserved.
+            ${settings.footerText || `&copy; ${currentYear} ${settings.siteName || 'Olflaz'}. All rights reserved.`}
           </div>
           <div>
-            Built with Vanilla JavaScript & Modern Dark Design System
+            ${settings.footerSubtext || 'Built with Vanilla JavaScript & Modern Dark Design System'}
           </div>
         </div>
       </div>

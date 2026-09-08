@@ -32,6 +32,77 @@ export function extractYouTubeVideoId(url) {
 }
 
 /**
+ * Fetch YouTube Video Metadata (Title, Author, High-Res Thumbnail)
+ * Uses client-safe, CORS-friendly oEmbed / Noembed endpoints with timeout and fallback.
+ * @param {string} url - YouTube video URL or ID
+ * @returns {Promise<{videoId: string, title: string, description: string, thumbnail: string, authorName: string}>}
+ */
+export async function fetchYouTubeMetadata(url) {
+  const videoId = extractYouTubeVideoId(url);
+  if (!videoId) {
+    throw new Error("Invalid YouTube video URL");
+  }
+
+  const thumbnail = getYouTubeThumbnailUrl(videoId, "maxres");
+  let title = "";
+  let authorName = "";
+
+  const canonicalUrl = `https://www.youtube.com/watch?v= ${videoId}`.replace(" ", "");
+
+  // Strategy 1: Noembed API (Fast, CORS-enabled, reliable)
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+    const res = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(canonicalUrl)}`, {
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.title) {
+        title = data.title;
+        authorName = data.author_name || "";
+      }
+    }
+  } catch (e) {
+    // Fallback if Noembed is unreachable
+  }
+
+  // Strategy 2: Direct YouTube oEmbed (if title still empty)
+  if (!title) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+      const res = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(canonicalUrl)}&format=json`, {
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.title) {
+          title = data.title;
+          authorName = data.author_name || "";
+        }
+      }
+    } catch (e) {
+      // Ignored
+    }
+  }
+
+  return {
+    videoId,
+    title: title || "",
+    description: "",
+    thumbnail,
+    authorName
+  };
+}
+
+/**
  * Get YouTube Thumbnail URL
  * @param {string} videoIdOrUrl - Video ID or full YouTube URL
  * @param {'maxres'|'hq'|'mq'|'default'} quality - Image quality
@@ -50,3 +121,5 @@ export function getYouTubeThumbnailUrl(videoIdOrUrl, quality = "maxres") {
 
   return `https://img.youtube.com/vi/${videoId}/${qualityFilename}`;
 }
+
+

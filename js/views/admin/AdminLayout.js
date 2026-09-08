@@ -106,10 +106,9 @@ export function renderAdminLayout(contentHtml, activeAdminRoute = "#/admin", bre
             </div>
           </div>
 
-          <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 8px;">
-            <a href="#/" class="btn btn-outline btn-sm btn-block">
+            <a href="#/" target="_blank" class="btn btn-outline btn-sm btn-block" title="Open live public website in new tab">
               ${getIcon("external", 14)}
-              <span>View Live Website</span>
+              <span>Preview Site ↗</span>
             </a>
             <button id="admin-logout-btn" class="btn btn-outline btn-sm btn-block admin-logout-btn" title="Sign out of Admin CMS">
               ${getIcon("logOut", 14)}

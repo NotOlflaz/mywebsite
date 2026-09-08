@@ -1,20 +1,76 @@
 /**
  * Admin Featured Content Curation View
- * Select and manage featured projects, videos, and portfolio items shown on the public Home page.
+ * Features: Explicit Sequencing (Project #1, #2... / Video #1, #2...),
+ * Drag-and-Drop Reordering, Add/Remove controls, and Three-state curation.
  */
 
 import { store } from "../../store/state.js";
 import { toast } from "../../components/Toast.js";
 import { getIcon } from "../../utils/icons.js";
+import { initDraggableList } from "../../utils/drag-drop.js";
 
 export function renderAdminFeaturedView() {
-  const projects = store.getProjects();
-  const videos = store.getVideos();
-  const portfolio = store.getPortfolio();
+  const allProjects = store.getProjects();
+  const allVideos = store.getVideos();
 
-  const featuredProjects = projects.filter(p => p.isFeatured);
-  const featuredVideos = videos.filter(v => v.isFeatured);
-  const featuredPortfolio = portfolio.filter(item => item.isFeatured);
+  const featuredProjects = store.getFeaturedProjects();
+  const featuredVideos = store.getFeaturedVideos();
+  const nonFeaturedProjects = allProjects.filter(p => !p.isFeatured);
+  const nonFeaturedVideos = allVideos.filter(v => !v.isFeatured);
+
+  const featuredProjectsListHtml = featuredProjects.length > 0 ? featuredProjects.map((p, idx) => `
+    <div class="home-section-card draggable-card" data-id="${p.id}" data-index="${idx}" id="featured-proj-card-${p.id}">
+      <div class="flex items-center gap-sm">
+        <span class="drag-handle" title="Drag to change display sequence">
+          ${getIcon('dragHandle', 16)}
+        </span>
+        <span class="badge badge-featured font-mono" style="font-size: 11px; padding: 2px 8px;">
+          #${idx + 1}
+        </span>
+        <div>
+          <strong style="color: var(--text-main); font-size: var(--text-sm);">${p.title}</strong>
+          <div class="text-xs text-muted">${p.category} • ${p.engine}</div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-xs">
+        <button type="button" class="btn btn-outline btn-sm remove-featured-proj-btn" data-id="${p.id}" title="Remove from Home Featured spotlight">
+          ${getIcon('close', 12)} Unfeature
+        </button>
+      </div>
+    </div>
+  `).join("") : `
+    <div class="empty-state-card" style="padding: var(--space-lg);">
+      <p class="text-xs text-muted">No projects currently featured on the homepage. Select from the available projects below.</p>
+    </div>
+  `;
+
+  const featuredVideosListHtml = featuredVideos.length > 0 ? featuredVideos.map((v, idx) => `
+    <div class="home-section-card draggable-card" data-id="${v.id}" data-index="${idx}" id="featured-vid-card-${v.id}">
+      <div class="flex items-center gap-sm">
+        <span class="drag-handle" title="Drag to change display sequence">
+          ${getIcon('dragHandle', 16)}
+        </span>
+        <span class="badge badge-featured font-mono" style="font-size: 11px; padding: 2px 8px;">
+          #${idx + 1}
+        </span>
+        <div>
+          <strong style="color: var(--text-main); font-size: var(--text-sm);">${v.title}</strong>
+          <div class="text-xs text-muted">${v.category} • ${v.views || '0 views'}</div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-xs">
+        <button type="button" class="btn btn-outline btn-sm remove-featured-vid-btn" data-id="${v.id}" title="Remove from Home Featured spotlight">
+          ${getIcon('close', 12)} Unfeature
+        </button>
+      </div>
+    </div>
+  `).join("") : `
+    <div class="empty-state-card" style="padding: var(--space-lg);">
+      <p class="text-xs text-muted">No videos currently featured. Select from available videos below.</p>
+    </div>
+  `;
 
   return `
     <div class="admin-featured-page">
@@ -22,103 +78,67 @@ export function renderAdminFeaturedView() {
       <!-- Page Header -->
       <div class="admin-page-header">
         <div class="admin-page-header-info">
-          <h1>Featured Content Curation</h1>
-          <p>Curate exactly which projects, tutorials, and portfolio items appear on the public Home page and spotlight sections.</p>
+          <h1>Featured Content Sequencing</h1>
+          <p>Curate and set the exact display order (Project #1, Project #2... / Video #1, Video #2...) for items shown in the homepage spotlights.</p>
         </div>
         <a href="#/" target="_blank" class="btn btn-secondary btn-sm">
-          ${getIcon('eye', 13)} Preview Home Page
+          ${getIcon('eye', 13)} Preview Live Home Page ↗
         </a>
       </div>
 
-      <!-- 1. FEATURED PROJECTS -->
+      <!-- 1. FEATURED PROJECTS ORDERING -->
       <div class="form-section">
         <div class="form-section-header">
           <div class="form-section-title">
-            <span>Featured Projects (${featuredProjects.length} Selected)</span>
+            <span>Featured Projects Order (${featuredProjects.length} Active)</span>
           </div>
-          <span class="text-xs text-muted">Recommended: 3 to 6 items</span>
+          <span class="text-xs text-muted">Drag ⠿ to reorder positions</span>
         </div>
         <div class="form-section-body">
-          <p class="text-sm text-muted">Toggle the checkboxes below to add or remove projects from the Home page "Featured Projects" section:</p>
-          ${projects.length > 0 ? `
-            <div style="display: flex; flex-direction: column; gap: var(--space-xs); margin-top: 8px;">
-              ${projects.map(p => `
-                <label class="form-checkbox-label" style="padding: var(--space-sm); border-radius: var(--radius-md); border: 1px solid var(--border-color); background: ${p.isFeatured ? 'var(--bg-surface-alt)' : 'var(--bg-surface)'};">
-                  <input type="checkbox" class="featured-project-toggle" data-id="${p.id}" ${p.isFeatured ? 'checked' : ''} />
-                  <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-                    <div>
-                      <strong style="font-size: var(--text-sm);">${p.title}</strong>
-                      <span class="badge" style="margin-left: 8px;">${p.category}</span>
-                    </div>
-                    <span class="font-mono text-xs text-muted">${p.engine} • ${p.status}</span>
-                  </div>
-                </label>
-              `).join("")}
+          <div style="display: flex; flex-direction: column; gap: var(--space-xs);" id="featured-projects-sortable-list">
+            ${featuredProjectsListHtml}
+          </div>
+
+          ${nonFeaturedProjects.length > 0 ? `
+            <div style="margin-top: var(--space-md); padding-top: var(--space-md); border-top: 1px dashed var(--border-color);">
+              <label class="form-label" style="font-size: 12px;">+ Add Available Project to Featured Spotlight:</label>
+              <div class="flex gap-xs flex-wrap">
+                ${nonFeaturedProjects.map(p => `
+                  <button type="button" class="btn btn-outline btn-sm add-to-featured-proj-btn" data-id="${p.id}">
+                    + ${p.title}
+                  </button>
+                `).join("")}
+              </div>
             </div>
-          ` : `
-            <p class="text-sm">No projects created yet. <a href="#/admin/projects">Add projects first</a>.</p>
-          `}
+          ` : ''}
         </div>
       </div>
 
-      <!-- 2. FEATURED VIDEOS -->
+      <!-- 2. FEATURED VIDEOS ORDERING -->
       <div class="form-section">
         <div class="form-section-header">
           <div class="form-section-title">
-            <span>Featured Videos & Spotlights (${featuredVideos.length} Selected)</span>
+            <span>Featured Videos Order (${featuredVideos.length} Active)</span>
           </div>
-          <span class="text-xs text-muted">Recommended: 2 to 4 items</span>
+          <span class="text-xs text-muted">Drag ⠿ to reorder positions</span>
         </div>
         <div class="form-section-body">
-          <p class="text-sm text-muted">Toggle the checkboxes below to select videos for the Home page and Videos top spotlight player:</p>
-          ${videos.length > 0 ? `
-            <div style="display: flex; flex-direction: column; gap: var(--space-xs); margin-top: 8px;">
-              ${videos.map(v => `
-                <label class="form-checkbox-label" style="padding: var(--space-sm); border-radius: var(--radius-md); border: 1px solid var(--border-color); background: ${v.isFeatured ? 'var(--bg-surface-alt)' : 'var(--bg-surface)'};">
-                  <input type="checkbox" class="featured-video-toggle" data-id="${v.id}" ${v.isFeatured ? 'checked' : ''} />
-                  <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-                    <div>
-                      <strong style="font-size: var(--text-sm);">${v.title}</strong>
-                      <span class="badge" style="margin-left: 8px;">${v.category}</span>
-                    </div>
-                    <span class="font-mono text-xs text-muted">${v.views}</span>
-                  </div>
-                </label>
-              `).join("")}
-            </div>
-          ` : `
-            <p class="text-sm">No videos created yet. <a href="#/admin/videos">Add videos first</a>.</p>
-          `}
-        </div>
-      </div>
+          <div style="display: flex; flex-direction: column; gap: var(--space-xs);" id="featured-videos-sortable-list">
+            ${featuredVideosListHtml}
+          </div>
 
-      <!-- 3. FEATURED PORTFOLIO -->
-      <div class="form-section">
-        <div class="form-section-header">
-          <div class="form-section-title">
-            <span>Featured Portfolio Items (${featuredPortfolio.length} Selected)</span>
-          </div>
-          <span class="text-xs text-muted">High-priority case studies</span>
-        </div>
-        <div class="form-section-body">
-          ${portfolio.length > 0 ? `
-            <div style="display: flex; flex-direction: column; gap: var(--space-xs);">
-              ${portfolio.map(item => `
-                <label class="form-checkbox-label" style="padding: var(--space-sm); border-radius: var(--radius-md); border: 1px solid var(--border-color); background: ${item.isFeatured ? 'var(--bg-surface-alt)' : 'var(--bg-surface)'};">
-                  <input type="checkbox" class="featured-portfolio-toggle" data-id="${item.id}" ${item.isFeatured ? 'checked' : ''} />
-                  <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-                    <div>
-                      <strong style="font-size: var(--text-sm);">${item.title}</strong>
-                      <span class="badge" style="margin-left: 8px;">${item.category}</span>
-                    </div>
-                    <span class="text-xs text-muted">${item.role || 'Creator'}</span>
-                  </div>
-                </label>
-              `).join("")}
+          ${nonFeaturedVideos.length > 0 ? `
+            <div style="margin-top: var(--space-md); padding-top: var(--space-md); border-top: 1px dashed var(--border-color);">
+              <label class="form-label" style="font-size: 12px;">+ Add Available Video to Featured Spotlight:</label>
+              <div class="flex gap-xs flex-wrap">
+                ${nonFeaturedVideos.map(v => `
+                  <button type="button" class="btn btn-outline btn-sm add-to-featured-vid-btn" data-id="${v.id}">
+                    + ${v.title}
+                  </button>
+                `).join("")}
+              </div>
             </div>
-          ` : `
-            <p class="text-sm">No portfolio items created yet. <a href="#/admin/portfolio">Add portfolio items</a>.</p>
-          `}
+          ` : ''}
         </div>
       </div>
 
@@ -127,35 +147,52 @@ export function renderAdminFeaturedView() {
 }
 
 export function initAdminFeaturedEvents(reRenderCallback) {
-  // Project checkboxes
-  const projCheckboxes = document.querySelectorAll(".featured-project-toggle");
-  projCheckboxes.forEach(cb => {
-    cb.addEventListener("change", () => {
-      const id = cb.getAttribute("data-id");
-      const isFeatured = store.toggleProjectFeatured(id);
-      toast.success(`Project featured status set to ${isFeatured ? 'Featured' : 'Standard'}`);
+  // Drag & drop for Featured Projects
+  const projContainer = document.getElementById("featured-projects-sortable-list");
+  if (projContainer) {
+    initDraggableList({
+      container: projContainer,
+      itemSelector: ".draggable-card",
+      handleSelector: ".drag-handle",
+      onReorder: (fromIdx, toIdx) => {
+        store.reorderFeaturedProjects(fromIdx, toIdx);
+        toast.info("Featured projects sequence updated!");
+        if (reRenderCallback) reRenderCallback();
+      }
+    });
+  }
+
+  // Drag & drop for Featured Videos
+  const vidContainer = document.getElementById("featured-videos-sortable-list");
+  if (vidContainer) {
+    initDraggableList({
+      container: vidContainer,
+      itemSelector: ".draggable-card",
+      handleSelector: ".drag-handle",
+      onReorder: (fromIdx, toIdx) => {
+        store.reorderFeaturedVideos(fromIdx, toIdx);
+        toast.info("Featured videos sequence updated!");
+        if (reRenderCallback) reRenderCallback();
+      }
+    });
+  }
+
+  // Add / Remove Project Featured
+  document.querySelectorAll(".add-to-featured-proj-btn, .remove-featured-proj-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.getAttribute("data-id");
+      store.toggleProjectFeatured(id);
+      toast.success("Featured projects updated!");
       if (reRenderCallback) reRenderCallback();
     });
   });
 
-  // Video checkboxes
-  const videoCheckboxes = document.querySelectorAll(".featured-video-toggle");
-  videoCheckboxes.forEach(cb => {
-    cb.addEventListener("change", () => {
-      const id = cb.getAttribute("data-id");
-      const isFeatured = store.toggleVideoFeatured(id);
-      toast.success(`Video featured status set to ${isFeatured ? 'Featured' : 'Standard'}`);
-      if (reRenderCallback) reRenderCallback();
-    });
-  });
-
-  // Portfolio checkboxes
-  const portCheckboxes = document.querySelectorAll(".featured-portfolio-toggle");
-  portCheckboxes.forEach(cb => {
-    cb.addEventListener("change", () => {
-      const id = cb.getAttribute("data-id");
-      const isFeatured = store.togglePortfolioFeatured(id);
-      toast.success(`Portfolio featured status set to ${isFeatured ? 'Featured' : 'Standard'}`);
+  // Add / Remove Video Featured
+  document.querySelectorAll(".add-to-featured-vid-btn, .remove-featured-vid-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.getAttribute("data-id");
+      store.toggleVideoFeatured(id);
+      toast.success("Featured videos updated!");
       if (reRenderCallback) reRenderCallback();
     });
   });

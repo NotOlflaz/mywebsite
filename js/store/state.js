@@ -22,18 +22,52 @@ class StateStore {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
+        
+        // Migrate projects with publishStatus & actionButtons
+        const rawProjects = Array.isArray(parsed.projects) ? parsed.projects : initialData.projects;
+        const migratedProjects = rawProjects.map(p => ({
+          ...p,
+          publishStatus: p.publishStatus || "published",
+          actionButtons: Array.isArray(p.actionButtons) && p.actionButtons.length > 0 ? p.actionButtons : [
+            ...(p.demoUrl ? [{ id: "btn-demo", label: "Play Demo", url: p.demoUrl, style: "primary", enabled: true }] : []),
+            ...(p.githubUrl ? [{ id: "btn-github", label: "GitHub", url: p.githubUrl, style: "secondary", enabled: true }] : []),
+            ...(p.youtubeUrl ? [{ id: "btn-youtube", label: "Watch Video", url: p.youtubeUrl, style: "outline", enabled: true }] : [])
+          ]
+        }));
+
+        // Migrate videos with publishStatus
+        const rawVideos = Array.isArray(parsed.videos) ? parsed.videos : initialData.videos;
+        const migratedVideos = rawVideos.map(v => ({
+          ...v,
+          publishStatus: v.publishStatus || "published"
+        }));
+
+        // Migrate portfolio with publishStatus & actionButtons
+        const rawPortfolio = Array.isArray(parsed.portfolio) ? parsed.portfolio : initialData.portfolio;
+        const migratedPortfolio = rawPortfolio.map(item => ({
+          ...item,
+          publishStatus: item.publishStatus || "published",
+          actionButtons: Array.isArray(item.actionButtons) ? item.actionButtons : []
+        }));
+
+        // Migrate home sections
+        const homeObj = { ...initialData.home, ...(parsed.home || {}) };
+        if (!Array.isArray(homeObj.sections) || homeObj.sections.length === 0) {
+          homeObj.sections = initialData.home.sections;
+        }
+
         return {
           ...initialData,
           ...parsed,
           appearance: { ...initialData.appearance, ...(parsed.appearance || {}) },
           siteSettings: { ...initialData.siteSettings, ...(parsed.siteSettings || {}) },
-          home: { ...initialData.home, ...(parsed.home || {}) },
+          home: homeObj,
           channelStats: { ...initialData.channelStats, ...(parsed.channelStats || {}) },
           about: { ...initialData.about, ...(parsed.about || {}) },
           socialLinks: { ...initialData.socialLinks, ...(parsed.socialLinks || {}) },
-          projects: Array.isArray(parsed.projects) ? parsed.projects : initialData.projects,
-          videos: Array.isArray(parsed.videos) ? parsed.videos : initialData.videos,
-          portfolio: Array.isArray(parsed.portfolio) ? parsed.portfolio : initialData.portfolio,
+          projects: migratedProjects,
+          videos: migratedVideos,
+          portfolio: migratedPortfolio,
           media: Array.isArray(parsed.media) ? parsed.media : initialData.media
         };
       }
@@ -57,17 +91,57 @@ class StateStore {
   }
 
   /**
-   * Apply live design system tokens directly to DOM root
+   * Apply live design system tokens directly to DOM root & CSS variables
    */
   applyAppearanceTokens() {
     if (typeof document === "undefined") return;
     const root = document.documentElement;
     const appearance = this.getAppearance();
 
+    root.setAttribute("data-theme", appearance.themePreset || "default");
     root.setAttribute("data-accent", appearance.accentColor || "cyan");
-    root.setAttribute("data-glow", appearance.ambientGlow || "off");
+    root.setAttribute("data-glow", appearance.glowLevel || appearance.ambientGlow || "subtle");
     root.setAttribute("data-pattern", appearance.bgPattern || "none");
     root.setAttribute("data-card-style", appearance.cardStyle || "solid");
+
+    // Dynamically apply hex color tokens
+    if (appearance.accentPrimaryHex) {
+      root.style.setProperty("--accent-primary", appearance.accentPrimaryHex);
+      root.style.setProperty("--accent-text", appearance.accentPrimaryHex);
+      root.style.setProperty("--border-focus", appearance.accentPrimaryHex);
+      root.style.setProperty("--accent-surface", `${appearance.accentPrimaryHex}0f`);
+      root.style.setProperty("--accent-border", `${appearance.accentPrimaryHex}38`);
+    }
+    if (appearance.accentSecondaryHex) {
+      root.style.setProperty("--accent-secondary", appearance.accentSecondaryHex);
+    }
+    if (appearance.bgPage) {
+      root.style.setProperty("--bg-page", appearance.bgPage);
+    }
+    if (appearance.bgSurface) {
+      root.style.setProperty("--bg-surface", appearance.bgSurface);
+    }
+    if (appearance.bgSurfaceAlt) {
+      root.style.setProperty("--bg-surface-alt", appearance.bgSurfaceAlt);
+    }
+    if (appearance.borderColor) {
+      root.style.setProperty("--border-color", appearance.borderColor);
+    }
+    if (appearance.textMain) {
+      root.style.setProperty("--text-main", appearance.textMain);
+    }
+    if (appearance.textMuted) {
+      root.style.setProperty("--text-muted", appearance.textMuted);
+    }
+    if (appearance.textLight) {
+      root.style.setProperty("--text-light", appearance.textLight);
+    }
+    if (appearance.btnTextColor) {
+      root.style.setProperty("--text-inverse", appearance.btnTextColor);
+    }
+    if (appearance.headingWeight) {
+      root.style.setProperty("--font-weight-heading", appearance.headingWeight);
+    }
   }
 
   /**
@@ -111,6 +185,12 @@ class StateStore {
     return this.state.home || initialData.home;
   }
 
+  getHomeSections() {
+    return (this.state.home && Array.isArray(this.state.home.sections))
+      ? this.state.home.sections
+      : (initialData.home.sections || []);
+  }
+
   getChannelStats() {
     return this.state.channelStats;
   }
@@ -127,6 +207,10 @@ class StateStore {
     return this.state.projects || [];
   }
 
+  getPublishedProjects() {
+    return (this.state.projects || []).filter(p => (p.publishStatus || "published") === "published");
+  }
+
   getProjectById(id) {
     return (this.state.projects || []).find(p => p.id === id || p.slug === id);
   }
@@ -135,8 +219,16 @@ class StateStore {
     return (this.state.projects || []).filter(p => p.isFeatured);
   }
 
+  getPublishedFeaturedProjects() {
+    return this.getPublishedProjects().filter(p => p.isFeatured);
+  }
+
   getVideos() {
     return this.state.videos || [];
+  }
+
+  getPublishedVideos() {
+    return (this.state.videos || []).filter(v => (v.publishStatus || "published") === "published");
   }
 
   getVideoById(id) {
@@ -147,12 +239,24 @@ class StateStore {
     return (this.state.videos || []).filter(v => v.isFeatured);
   }
 
+  getPublishedFeaturedVideos() {
+    return this.getPublishedVideos().filter(v => v.isFeatured);
+  }
+
   getPortfolio() {
     return this.state.portfolio || [];
   }
 
+  getPublishedPortfolio() {
+    return (this.state.portfolio || []).filter(item => (item.publishStatus || "published") === "published");
+  }
+
   getFeaturedPortfolio() {
     return (this.state.portfolio || []).filter(item => item.isFeatured);
+  }
+
+  getPublishedFeaturedPortfolio() {
+    return this.getPublishedPortfolio().filter(item => item.isFeatured);
   }
 
   getMedia() {
@@ -192,7 +296,7 @@ class StateStore {
   }
 
   /* ==========================================================================
-     MUTATIONS: HOME
+     MUTATIONS: HOME & SECTIONS
      ========================================================================== */
 
   updateHome(updates) {
@@ -202,6 +306,24 @@ class StateStore {
     };
     this.saveState();
     return this.state.home;
+  }
+
+  reorderHomeSections(fromIndex, toIndex) {
+    const sections = [...this.getHomeSections()];
+    if (fromIndex < 0 || fromIndex >= sections.length || toIndex < 0 || toIndex >= sections.length) return;
+    const [moved] = sections.splice(fromIndex, 1);
+    sections.splice(toIndex, 0, moved);
+    if (!this.state.home) this.state.home = {};
+    this.state.home.sections = sections;
+    this.saveState();
+    return this.state.home.sections;
+  }
+
+  updateHomeSections(sections) {
+    if (!this.state.home) this.state.home = {};
+    this.state.home.sections = sections;
+    this.saveState();
+    return this.state.home.sections;
   }
 
   /* ==========================================================================
@@ -222,6 +344,7 @@ class StateStore {
       category: "Godot Games",
       engine: "Godot 4",
       status: "In Development",
+      publishStatus: "published",
       devDate: new Date().getFullYear().toString(),
       shortDesc: "",
       fullDesc: "",
@@ -229,6 +352,10 @@ class StateStore {
       screenshots: [],
       technologies: [],
       features: [],
+      actionButtons: [
+        ...(projectData.demoUrl ? [{ id: "btn-demo", label: "Play Demo", url: projectData.demoUrl, style: "primary", enabled: true }] : []),
+        ...(projectData.githubUrl ? [{ id: "btn-github", label: "GitHub", url: projectData.githubUrl, style: "secondary", enabled: true }] : [])
+      ],
       githubUrl: "",
       demoUrl: "",
       youtubeUrl: "",
@@ -256,6 +383,21 @@ class StateStore {
     return null;
   }
 
+  updateProjectPublishStatus(id, publishStatus) {
+    return this.updateProject(id, { publishStatus });
+  }
+
+  reorderProjects(fromIndex, toIndex) {
+    if (!Array.isArray(this.state.projects)) return;
+    const items = [...this.state.projects];
+    if (fromIndex < 0 || fromIndex >= items.length || toIndex < 0 || toIndex >= items.length) return;
+    const [moved] = items.splice(fromIndex, 1);
+    items.splice(toIndex, 0, moved);
+    this.state.projects = items;
+    this.saveState();
+    return this.state.projects;
+  }
+
   deleteProject(id) {
     const initialLen = this.state.projects.length;
     this.state.projects = this.state.projects.filter(p => p.id !== id);
@@ -276,6 +418,18 @@ class StateStore {
     return false;
   }
 
+  reorderFeaturedProjects(fromIndex, toIndex) {
+    const featured = this.getFeaturedProjects();
+    if (fromIndex < 0 || fromIndex >= featured.length || toIndex < 0 || toIndex >= featured.length) return;
+    const [moved] = featured.splice(fromIndex, 1);
+    featured.splice(toIndex, 0, moved);
+
+    const nonFeatured = (this.state.projects || []).filter(p => !p.isFeatured);
+    this.state.projects = [...featured, ...nonFeatured];
+    this.saveState();
+    return this.getFeaturedProjects();
+  }
+
   /* ==========================================================================
      MUTATIONS: VIDEOS
      ========================================================================== */
@@ -284,7 +438,7 @@ class StateStore {
     const id = "vid-" + Date.now();
     let youtubeId = "";
     if (videoData.youtubeUrl) {
-      const match = videoData.youtubeUrl.match(/(?:v=|\/embed\/|youtu\.be\/|\/v\/)([^&#?]+)/);
+      const match = videoData.youtubeUrl.match(/(?:v=|\/embed\/|youtu\.be\/|\/v\/|\/shorts\/)([^&#?]+)/);
       if (match && match[1]) {
         youtubeId = match[1];
       }
@@ -300,6 +454,7 @@ class StateStore {
       views: "0 views",
       uploadDate: "Just now",
       category: "Godot Tutorials",
+      publishStatus: "published",
       tags: [],
       isFeatured: false,
       ...videoData
@@ -315,7 +470,7 @@ class StateStore {
     const index = this.state.videos.findIndex(v => v.id === id);
     if (index !== -1) {
       if (updates.youtubeUrl && !updates.youtubeId) {
-        const match = updates.youtubeUrl.match(/(?:v=|\/embed\/|youtu\.be\/|\/v\/)([^&#?]+)/);
+        const match = updates.youtubeUrl.match(/(?:v=|\/embed\/|youtu\.be\/|\/v\/|\/shorts\/)([^&#?]+)/);
         if (match && match[1]) {
           updates.youtubeId = match[1];
         }
@@ -328,6 +483,21 @@ class StateStore {
       return this.state.videos[index];
     }
     return null;
+  }
+
+  updateVideoPublishStatus(id, publishStatus) {
+    return this.updateVideo(id, { publishStatus });
+  }
+
+  reorderVideos(fromIndex, toIndex) {
+    if (!Array.isArray(this.state.videos)) return;
+    const items = [...this.state.videos];
+    if (fromIndex < 0 || fromIndex >= items.length || toIndex < 0 || toIndex >= items.length) return;
+    const [moved] = items.splice(fromIndex, 1);
+    items.splice(toIndex, 0, moved);
+    this.state.videos = items;
+    this.saveState();
+    return this.state.videos;
   }
 
   deleteVideo(id) {
@@ -350,6 +520,18 @@ class StateStore {
     return false;
   }
 
+  reorderFeaturedVideos(fromIndex, toIndex) {
+    const featured = this.getFeaturedVideos();
+    if (fromIndex < 0 || fromIndex >= featured.length || toIndex < 0 || toIndex >= featured.length) return;
+    const [moved] = featured.splice(fromIndex, 1);
+    featured.splice(toIndex, 0, moved);
+
+    const nonFeatured = (this.state.videos || []).filter(v => !v.isFeatured);
+    this.state.videos = [...featured, ...nonFeatured];
+    this.saveState();
+    return this.getFeaturedVideos();
+  }
+
   /* ==========================================================================
      MUTATIONS: PORTFOLIO
      ========================================================================== */
@@ -366,6 +548,8 @@ class StateStore {
       description: "",
       image: "",
       links: "",
+      publishStatus: "published",
+      actionButtons: [],
       isFeatured: false,
       ...itemData
     };
@@ -387,6 +571,21 @@ class StateStore {
       return this.state.portfolio[index];
     }
     return null;
+  }
+
+  updatePortfolioPublishStatus(id, publishStatus) {
+    return this.updatePortfolioItem(id, { publishStatus });
+  }
+
+  reorderPortfolio(fromIndex, toIndex) {
+    if (!Array.isArray(this.state.portfolio)) return;
+    const items = [...this.state.portfolio];
+    if (fromIndex < 0 || fromIndex >= items.length || toIndex < 0 || toIndex >= items.length) return;
+    const [moved] = items.splice(fromIndex, 1);
+    items.splice(toIndex, 0, moved);
+    this.state.portfolio = items;
+    this.saveState();
+    return this.state.portfolio;
   }
 
   deletePortfolioItem(id) {

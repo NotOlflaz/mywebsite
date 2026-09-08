@@ -5,10 +5,25 @@
 
 export const initialData = {
   appearance: {
-    accentColor: "cyan", // cyan, emerald, purple, amber, crimson
-    bgPattern: "none",   // none, grid, dots
-    ambientGlow: "off",  // off, subtle, vibrant
-    cardStyle: "solid"   // solid, glass
+    themePreset: "default", // default (Olflaz Dark), pure-black, dark-minimal, custom
+    accentColor: "cyan",    // cyan, emerald, purple, amber, crimson, custom
+    accentPrimaryHex: "#38bdf8",
+    accentSecondaryHex: "#0ea5e9",
+    bgPage: "#08090c",
+    bgSurface: "#11141b",
+    bgSurfaceAlt: "#161923",
+    borderColor: "rgba(255, 255, 255, 0.08)",
+    textMain: "#f1f4f9",
+    textMuted: "#94a0b5",
+    textLight: "#5f687a",
+    btnTextColor: "#08090c",
+    glowLevel: "subtle",    // off, low, subtle, medium, vibrant
+    bgPattern: "none",      // none, grid, dots
+    cardStyle: "solid",     // solid, glass
+    headingWeight: "700",
+    bgAtmosphereGlow: "subtle",
+    bgShapeVisible: true,
+    bgShapeOpacity: "0.2"
   },
 
   siteSettings: {
@@ -31,7 +46,16 @@ export const initialData = {
     primaryCtaLink: "#/projects",
     secondaryCtaText: "Watch My Videos",
     secondaryCtaLink: "#/videos",
-    avatarUrl: ""
+    avatarUrl: "",
+    sections: [
+      { id: "hero", name: "Hero Landing", title: "Hero", enabled: true },
+      { id: "channel", name: "Channel Overview", title: "Channel & Creator Overview", enabled: true },
+      { id: "projects", name: "Featured Projects", title: "Featured Projects", enabled: true },
+      { id: "videos", name: "Featured Videos", title: "Featured Videos & Tutorials", enabled: true },
+      { id: "about", name: "About Preview", title: "About Olflaz", enabled: true },
+      { id: "skills", name: "Skills & What I Do", title: "Skills & Core Stack", enabled: true },
+      { id: "cta", name: "Call To Action & Community", title: "Join The Community", enabled: true }
+    ]
   },
 
   channelStats: {

@@ -1,17 +1,21 @@
 /**
  * Admin Video Management View
- * Features: Structured Add/Edit Sections, Search, Filter, Live CRUD, Save Feedback, and Empty States.
+ * Features: YouTube Metadata Auto-Fill, PC Custom Thumbnail Upload,
+ * Drag-and-Drop Reordering, Draft/Published Publishing Workflow,
+ * Search, Category Filtering, Live CRUD, and Toast Feedback.
  */
 
 import { store } from "../../store/state.js";
 import { modal } from "../../components/Modal.js";
 import { toast } from "../../components/Toast.js";
 import { getIcon } from "../../utils/icons.js";
-import { extractYouTubeVideoId, getYouTubeThumbnailUrl } from "../../utils/youtube.js";
+import { extractYouTubeVideoId, getYouTubeThumbnailUrl, fetchYouTubeMetadata } from "../../utils/youtube.js";
 import { renderImageUploader, initImageUploader } from "../../components/ImageUploader.js";
+import { initDraggableList } from "../../utils/drag-drop.js";
 
 let videoSearchQuery = "";
 let videoCategoryFilter = "All";
+let videoStatusFilter = "All"; // "All", "published", "draft"
 
 export function renderAdminVideosView() {
   const allVideos = store.getVideos();
@@ -19,34 +23,53 @@ export function renderAdminVideosView() {
 
   const filteredVideos = allVideos.filter(v => {
     const matchesCat = videoCategoryFilter === "All" || v.category === videoCategoryFilter;
+    const matchesStatus = videoStatusFilter === "All" || (v.publishStatus || "published") === videoStatusFilter;
     const matchesSearch = !videoSearchQuery ||
       v.title.toLowerCase().includes(videoSearchQuery.toLowerCase()) ||
       v.description.toLowerCase().includes(videoSearchQuery.toLowerCase()) ||
       (v.tags || []).some(t => t.toLowerCase().includes(videoSearchQuery.toLowerCase()));
-    return matchesCat && matchesSearch;
+    return matchesCat && matchesStatus && matchesSearch;
   });
 
-  const tableRowsHtml = filteredVideos.length > 0 ? filteredVideos.map(video => {
+  const tableRowsHtml = filteredVideos.length > 0 ? filteredVideos.map((video, idx) => {
     const displayThumb = video.thumbnail || (video.youtubeId ? getYouTubeThumbnailUrl(video.youtubeId) : (video.youtubeUrl ? getYouTubeThumbnailUrl(video.youtubeUrl) : ''));
+    const isPublished = (video.publishStatus || "published") === "published";
+
     return `
-      <tr id="admin-video-row-${video.id}">
+      <tr class="draggable-row" data-id="${video.id}" data-index="${idx}" id="admin-video-row-${video.id}">
+        <td style="width: 38px; text-align: center;">
+          <span class="drag-handle" title="Drag to reorder video display sequence">
+            ${getIcon('dragHandle', 16)}
+          </span>
+        </td>
         <td>
           <div class="flex items-center gap-sm">
-            <div style="width: 52px; height: 32px; background: var(--bg-surface-alt); border: 1px solid var(--border-color); border-radius: var(--radius-sm); overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 10px; position: relative;">
+            <div style="width: 54px; height: 34px; background: var(--bg-surface-alt); border: 1px solid var(--border-color); border-radius: var(--radius-sm); overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 10px; position: relative; flex-shrink: 0;">
               ${displayThumb ? `<img src="${displayThumb}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" />` : getIcon('play', 12)}
-              ${video.thumbnail ? `<span style="position: absolute; bottom: 1px; right: 1px; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-primary);" title="Custom thumbnail applied"></span>` : ''}
+              ${video.thumbnail ? `<span style="position: absolute; bottom: 1px; right: 1px; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-primary);" title="Custom uploaded thumbnail"></span>` : ''}
             </div>
             <div>
-              <strong style="color: var(--text-main); font-size: var(--text-sm);">${video.title}</strong>
+              <div class="flex items-center gap-xs">
+                <strong style="color: var(--text-main); font-size: var(--text-sm);">${video.title}</strong>
+              </div>
               <div class="text-xs text-muted" style="max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                ${video.description}
+                ${video.description || 'No description provided.'}
               </div>
             </div>
           </div>
         </td>
         <td><span class="badge">${video.category || 'General'}</span></td>
-        <td class="font-mono text-xs">${video.views || '0'}</td>
-        <td class="text-xs">${video.uploadDate || '-'}</td>
+        <td>
+          <button 
+            type="button" 
+            class="badge ${isPublished ? 'badge-published' : 'badge-draft'} toggle-video-status-btn" 
+            data-id="${video.id}"
+            style="cursor: pointer; border-radius: var(--radius-xs);"
+            title="Click to toggle Draft / Published status">
+            ${isPublished ? '● Published' : '○ Draft'}
+          </button>
+        </td>
+        <td class="font-mono text-xs">${video.views || '0 views'}</td>
         <td>
           <button 
             class="badge ${video.isFeatured ? 'badge-featured' : ''} toggle-video-featured-btn" 
@@ -80,48 +103,59 @@ export function renderAdminVideosView() {
       <div class="admin-page-header">
         <div class="admin-page-header-info">
           <h1>Videos Management</h1>
-          <p>Add, edit, feature, and organize YouTube tutorials, Minecraft challenge videos, and Godot devlogs.</p>
+          <p>Add, edit, feature, and reorder YouTube tutorials, Minecraft devlogs, and game development videos with instant metadata auto-fill.</p>
         </div>
-        <button class="btn btn-primary" id="admin-add-video-btn">
-          ${getIcon('plus', 14)} Add New Video
-        </button>
+        <div class="flex gap-xs">
+          <a href="#/videos" target="_blank" class="btn btn-secondary btn-sm">
+            ${getIcon('eye', 13)} Preview Videos Page ↗
+          </a>
+          <button class="btn btn-primary btn-sm" id="admin-add-video-btn">
+            ${getIcon('plus', 14)} Add New Video
+          </button>
+        </div>
       </div>
 
-      <!-- Search & Filter Toolbar -->
+      <!-- Search, Status Filter & Category Toolbar -->
       <div class="admin-table-toolbar">
-        <div class="admin-search-filter-group">
+        <div class="admin-search-filter-group flex-wrap">
           <input 
             type="text" 
             class="form-input" 
             id="admin-video-search-input" 
             placeholder="Search videos by title, description, or tags..." 
             value="${videoSearchQuery}" 
-            style="max-width: 300px;"
+            style="max-width: 280px;"
           />
-          <select class="form-select" id="admin-video-category-filter" style="max-width: 200px;">
-            ${categories.map(c => `<option value="${c}" ${c === videoCategoryFilter ? 'selected' : ''}>${c}</option>`).join("")}
+          <select class="form-select" id="admin-video-category-filter" style="max-width: 170px;">
+            ${categories.map(c => `<option value="${c}" ${c === videoCategoryFilter ? 'selected' : ''}>Category: ${c}</option>`).join("")}
+          </select>
+          <select class="form-select" id="admin-video-status-filter" style="max-width: 150px;">
+            <option value="All" ${videoStatusFilter === 'All' ? 'selected' : ''}>Status: All</option>
+            <option value="published" ${videoStatusFilter === 'published' ? 'selected' : ''}>Status: Published</option>
+            <option value="draft" ${videoStatusFilter === 'draft' ? 'selected' : ''}>Status: Draft</option>
           </select>
         </div>
         <div class="text-xs text-muted font-mono">
-          Showing ${filteredVideos.length} of ${allVideos.length} videos
+          Showing ${filteredVideos.length} of ${allVideos.length} videos • Drag ⠿ to reorder
         </div>
       </div>
 
       <!-- Videos Table or Empty State -->
       ${filteredVideos.length > 0 ? `
         <div class="table-responsive">
-          <table class="data-table">
+          <table class="data-table" id="admin-videos-table">
             <thead>
               <tr>
+                <th style="width: 38px;"></th>
                 <th>Video Title & Details</th>
                 <th>Category</th>
+                <th>Status</th>
                 <th>Views</th>
-                <th>Date</th>
                 <th>Featured</th>
                 <th>Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody id="admin-videos-tbody">
               ${tableRowsHtml}
             </tbody>
           </table>
@@ -131,8 +165,8 @@ export function renderAdminVideosView() {
           <div class="empty-state-icon">${getIcon('videos', 32)}</div>
           <h3 class="empty-state-title">No Videos Found</h3>
           <p class="empty-state-desc">
-            ${videoSearchQuery || videoCategoryFilter !== 'All' 
-              ? 'No videos match your current search or category filter. Try clearing filters or add a new video.'
+            ${videoSearchQuery || videoCategoryFilter !== 'All' || videoStatusFilter !== 'All'
+              ? 'No videos match your current search or filter criteria. Try clearing filters or add a new video.'
               : 'You have not added any videos yet. Add your YouTube tutorials or devlogs to showcase them.'}
           </p>
           <button class="btn btn-primary" id="empty-state-add-video-btn">
@@ -146,9 +180,24 @@ export function renderAdminVideosView() {
 }
 
 /**
- * Event handlers for video CRUD
+ * Event handlers for video CRUD and Drag & Drop
  */
 export function initAdminVideosEvents(reRenderCallback) {
+  // Initialize Drag & Drop Table Reordering
+  const tbody = document.getElementById("admin-videos-tbody");
+  if (tbody) {
+    initDraggableList({
+      container: tbody,
+      itemSelector: "tr.draggable-row",
+      handleSelector: ".drag-handle",
+      onReorder: (fromIdx, toIdx) => {
+        store.reorderVideos(fromIdx, toIdx);
+        toast.info("Video sequence updated!");
+        if (reRenderCallback) reRenderCallback();
+      }
+    });
+  }
+
   // Search & Filter
   const searchInput = document.getElementById("admin-video-search-input");
   if (searchInput) {
@@ -165,6 +214,29 @@ export function initAdminVideosEvents(reRenderCallback) {
       if (reRenderCallback) reRenderCallback();
     });
   }
+
+  const statusSelect = document.getElementById("admin-video-status-filter");
+  if (statusSelect) {
+    statusSelect.addEventListener("change", (e) => {
+      videoStatusFilter = e.target.value;
+      if (reRenderCallback) reRenderCallback();
+    });
+  }
+
+  // Quick Toggle Published / Draft Status
+  const statusToggleBtns = document.querySelectorAll(".toggle-video-status-btn");
+  statusToggleBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.getAttribute("data-id");
+      const video = store.getVideoById(id);
+      if (video) {
+        const nextStatus = (video.publishStatus || "published") === "published" ? "draft" : "published";
+        store.updateVideoPublishStatus(id, nextStatus);
+        toast.success(`Video "${video.title}" set to ${nextStatus === 'published' ? 'Published' : 'Draft'}`);
+        if (reRenderCallback) reRenderCallback();
+      }
+    });
+  });
 
   // Toggle Featured
   const toggleBtns = document.querySelectorAll(".toggle-video-featured-btn");
@@ -190,6 +262,7 @@ export function initAdminVideosEvents(reRenderCallback) {
     emptyAddBtn.addEventListener("click", () => {
       videoSearchQuery = "";
       videoCategoryFilter = "All";
+      videoStatusFilter = "All";
       openVideoFormModal(null, reRenderCallback);
     });
   }
@@ -231,6 +304,7 @@ function openVideoFormModal(videoToEdit = null, onSaved = null) {
     views: "0 views",
     uploadDate: "Just now",
     category: "Godot Tutorials",
+    publishStatus: "published",
     tags: ["Godot", "Tutorial"],
     isFeatured: false
   };
@@ -238,25 +312,42 @@ function openVideoFormModal(videoToEdit = null, onSaved = null) {
   const bodyHtml = `
     <form id="video-crud-form" style="display: flex; flex-direction: column; gap: var(--space-lg);">
       
-      <!-- 1. BASIC INFORMATION -->
+      <!-- 1. BASIC INFORMATION & YOUTUBE AUTO-FILL -->
       <div class="form-section">
         <div class="form-section-header">
           <div class="form-section-title">
-            <span>1. Basic Video Information</span>
+            <span>1. YouTube Link & Instant Auto-Fill</span>
           </div>
+          <span class="text-xs text-accent" id="yt-autofill-status" style="display: none;">
+            ${getIcon('wand', 13)} Auto-filling metadata...
+          </span>
         </div>
         <div class="form-section-body">
+          <div class="form-group">
+            <label class="form-label" for="video-url">YouTube URL *</label>
+            <div class="flex gap-xs">
+              <input 
+                type="url" 
+                class="form-input" 
+                id="video-url" 
+                required 
+                value="${escapeHtml(video.youtubeUrl)}" 
+                placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..." 
+                style="flex: 1;"
+              />
+              <button type="button" class="btn btn-secondary btn-sm" id="yt-manual-fetch-btn" title="Fetch video title & thumbnail from YouTube">
+                ${getIcon('wand', 14)} Auto-Fill
+              </button>
+            </div>
+            <span class="form-helper">Supports youtube.com/watch?v=, youtu.be/, and youtube.com/shorts/.</span>
+          </div>
+
           <div class="form-group">
             <label class="form-label" for="video-title">Video Title *</label>
             <input type="text" class="form-input" id="video-title" required value="${escapeHtml(video.title)}" placeholder="e.g. Building a 2D Platformer in Godot 4" />
           </div>
 
           <div class="form-row">
-            <div class="form-group">
-              <label class="form-label" for="video-url">YouTube URL *</label>
-              <input type="url" class="form-input" id="video-url" required value="${escapeHtml(video.youtubeUrl)}" placeholder="https://www.youtube.com/watch?v=..." />
-            </div>
-
             <div class="form-group">
               <label class="form-label" for="video-category">Category *</label>
               <select class="form-select" id="video-category">
@@ -267,15 +358,23 @@ function openVideoFormModal(videoToEdit = null, onSaved = null) {
                 <option value="Shorts" ${video.category === 'Shorts' ? 'selected' : ''}>Shorts</option>
               </select>
             </div>
+
+            <div class="form-group">
+              <label class="form-label" for="video-publish-status">Publishing Status *</label>
+              <select class="form-select" id="video-publish-status">
+                <option value="published" ${(video.publishStatus || 'published') === 'published' ? 'selected' : ''}>● Published (Visible on Public Website)</option>
+                <option value="draft" ${(video.publishStatus || 'published') === 'draft' ? 'selected' : ''}>○ Draft (Admin Only / Hidden Publicly)</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- 2. METRICS & DATES -->
+      <!-- 2. METRICS & TIMELINE -->
       <div class="form-section">
         <div class="form-section-header">
           <div class="form-section-title">
-            <span>2. Display Metrics & Timeline</span>
+            <span>2. Metrics & Display Timeline</span>
           </div>
         </div>
         <div class="form-section-body">
@@ -286,23 +385,23 @@ function openVideoFormModal(videoToEdit = null, onSaved = null) {
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="video-date">Upload Date Label</label>
+              <label class="form-label" for="video-date">Upload Date Display</label>
               <input type="text" class="form-input" id="video-date" value="${escapeHtml(video.uploadDate)}" placeholder="e.g. 2 weeks ago" />
             </div>
           </div>
         </div>
       </div>
 
-      <!-- 3. MEDIA & DETAILS -->
+      <!-- 3. THUMBNAIL & SUMMARY -->
       <div class="form-section">
         <div class="form-section-header">
           <div class="form-section-title">
-            <span>3. Video Thumbnail & Summary</span>
+            <span>3. Video Thumbnail & Details</span>
           </div>
         </div>
         <div class="form-section-body">
           
-          <!-- Auto-Detected YouTube Thumbnail Card -->
+          <!-- Auto-Detected YouTube Thumbnail Banner -->
           <div id="youtube-auto-thumb-container" style="background: var(--bg-surface-alt); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: var(--space-md); margin-bottom: var(--space-sm);">
             <div class="flex items-center justify-between" style="margin-bottom: 8px;">
               <span class="text-xs font-bold flex items-center gap-xs text-main">
@@ -310,7 +409,7 @@ function openVideoFormModal(videoToEdit = null, onSaved = null) {
                 <span>Automatic YouTube Thumbnail</span>
               </span>
               <span class="badge" id="yt-detect-status-badge" style="background: var(--accent-surface); color: var(--accent-text); border-color: var(--accent-border);">
-                Auto Generated
+                No Video Detected
               </span>
             </div>
 
@@ -322,7 +421,7 @@ function openVideoFormModal(videoToEdit = null, onSaved = null) {
               </div>
             </div>
             <div class="text-xs text-light" style="margin-top: 6px; font-size: 11px;">
-              By default, this official high-definition thumbnail is used across the website.
+              This official high-definition thumbnail is used across the site unless overridden below.
             </div>
           </div>
 
@@ -332,7 +431,7 @@ function openVideoFormModal(videoToEdit = null, onSaved = null) {
               id: "video-thumbnail",
               value: video.thumbnail,
               label: "Custom Thumbnail Override (Optional)",
-              helperText: "Upload a custom PNG/JPG/WEBP from PC if you don't want the default YouTube thumbnail.",
+              helperText: "Upload a custom PNG/JPG/WEBP from PC to override the default YouTube thumbnail.",
               placeholder: "https://... or upload from PC",
               aspect: "16/9"
             })}
@@ -350,7 +449,7 @@ function openVideoFormModal(videoToEdit = null, onSaved = null) {
         </div>
       </div>
 
-      <!-- 4. PUBLISHING & FEATURED -->
+      <!-- 4. FEATURED SPOTLIGHT -->
       <div class="form-section">
         <div class="form-section-header">
           <div class="form-section-title">
@@ -372,7 +471,7 @@ function openVideoFormModal(videoToEdit = null, onSaved = null) {
 
   const footerHtml = `
     <button type="button" class="btn btn-outline" id="modal-cancel-btn">Cancel</button>
-    <button type="button" class="btn btn-primary" id="modal-save-video-btn">${isEdit ? 'Save Changes' : 'Publish Video'}</button>
+    <button type="button" class="btn btn-primary" id="modal-save-video-btn">${isEdit ? 'Save Changes' : 'Save Video'}</button>
   `;
 
   modal.open({
@@ -384,53 +483,104 @@ function openVideoFormModal(videoToEdit = null, onSaved = null) {
       const cancelBtn = modalEl.querySelector("#modal-cancel-btn");
       const saveBtn = modalEl.querySelector("#modal-save-video-btn");
       const urlInput = modalEl.querySelector("#video-url");
+      const titleInput = modalEl.querySelector("#video-title");
+      const descInput = modalEl.querySelector("#video-description");
+      const autoFillBtn = modalEl.querySelector("#yt-manual-fetch-btn");
+      const autoFillStatus = modalEl.querySelector("#yt-autofill-status");
       const ytAutoImg = modalEl.querySelector("#yt-auto-thumb-img");
       const ytPlaceholder = modalEl.querySelector("#yt-no-url-placeholder");
       const ytStatusBadge = modalEl.querySelector("#yt-detect-status-badge");
 
+      let userModifiedTitle = isEdit && Boolean(video.title);
+      let userModifiedDesc = isEdit && Boolean(video.description);
+
+      titleInput.addEventListener("input", () => { userModifiedTitle = true; });
+      descInput.addEventListener("input", () => { userModifiedDesc = true; });
+
       // Initialize Reusable Image Uploader for custom thumbnail
       initImageUploader(modalEl, "video-thumbnail");
 
-      // Update automatic YouTube thumbnail preview
-      const updateYouTubeThumbnailPreview = () => {
-        const url = urlInput ? urlInput.value.trim() : "";
+      // YouTube Auto-Fill Function
+      const performYouTubeAutoFill = async (url) => {
         const videoId = extractYouTubeVideoId(url);
-
-        if (videoId) {
-          const autoThumb = getYouTubeThumbnailUrl(videoId, "maxres");
-          if (ytAutoImg) {
-            ytAutoImg.src = autoThumb;
-            ytAutoImg.style.display = "block";
-            // Fallback to hqdefault if maxres fails
-            ytAutoImg.onerror = () => {
-              ytAutoImg.src = getYouTubeThumbnailUrl(videoId, "hq");
-            };
-          }
-          if (ytPlaceholder) ytPlaceholder.style.display = "none";
-          if (ytStatusBadge) {
-            ytStatusBadge.textContent = `ID: ${videoId}`;
-            ytStatusBadge.style.display = "inline-block";
-          }
-        } else {
-          if (ytAutoImg) {
-            ytAutoImg.src = "";
-            ytAutoImg.style.display = "none";
-          }
+        if (!videoId) {
+          if (ytAutoImg) ytAutoImg.style.display = "none";
           if (ytPlaceholder) ytPlaceholder.style.display = "block";
-          if (ytStatusBadge) {
-            ytStatusBadge.textContent = "No Video Detected";
+          if (ytStatusBadge) ytStatusBadge.textContent = "No Video Detected";
+          return;
+        }
+
+        // Live preview of thumbnail
+        const autoThumb = getYouTubeThumbnailUrl(videoId, "maxres");
+        if (ytAutoImg) {
+          ytAutoImg.src = autoThumb;
+          ytAutoImg.style.display = "block";
+          ytAutoImg.onerror = () => {
+            ytAutoImg.src = getYouTubeThumbnailUrl(videoId, "hq");
+          };
+        }
+        if (ytPlaceholder) ytPlaceholder.style.display = "none";
+        if (ytStatusBadge) ytStatusBadge.textContent = `ID: ${videoId}`;
+
+        // Fetch title & metadata
+        if (autoFillStatus) autoFillStatus.style.display = "inline-flex";
+        try {
+          const meta = await fetchYouTubeMetadata(url);
+          if (meta && meta.title) {
+            // Only auto-fill if title is empty or not manually typed by user
+            if (!titleInput.value.trim() || !userModifiedTitle) {
+              titleInput.value = meta.title;
+              userModifiedTitle = false;
+            }
+            if (meta.description && (!descInput.value.trim() || !userModifiedDesc)) {
+              descInput.value = meta.description;
+              userModifiedDesc = false;
+            }
+            toast.success(`Detected YouTube: "${meta.title}"`);
           }
+        } catch (err) {
+          // Graceful fallback
+        } finally {
+          if (autoFillStatus) autoFillStatus.style.display = "none";
         }
       };
 
       if (urlInput) {
-        urlInput.addEventListener("input", updateYouTubeThumbnailPreview);
-        urlInput.addEventListener("change", updateYouTubeThumbnailPreview);
-        urlInput.addEventListener("paste", () => setTimeout(updateYouTubeThumbnailPreview, 50));
+        let debounceTimer = null;
+        urlInput.addEventListener("input", () => {
+          clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(() => {
+            performYouTubeAutoFill(urlInput.value.trim());
+          }, 350);
+        });
+
+        urlInput.addEventListener("paste", () => {
+          setTimeout(() => performYouTubeAutoFill(urlInput.value.trim()), 50);
+        });
+      }
+
+      if (autoFillBtn) {
+        autoFillBtn.addEventListener("click", () => {
+          const url = urlInput.value.trim();
+          if (!url) {
+            toast.error("Please enter a YouTube URL first.");
+            urlInput.focus();
+            return;
+          }
+          performYouTubeAutoFill(url);
+        });
       }
 
       // Initial check on modal open
-      updateYouTubeThumbnailPreview();
+      if (video.youtubeUrl) {
+        const videoId = extractYouTubeVideoId(video.youtubeUrl);
+        if (videoId && ytAutoImg) {
+          ytAutoImg.src = getYouTubeThumbnailUrl(videoId, "maxres");
+          ytAutoImg.style.display = "block";
+          if (ytPlaceholder) ytPlaceholder.style.display = "none";
+          if (ytStatusBadge) ytStatusBadge.textContent = `ID: ${videoId}`;
+        }
+      }
 
       cancelBtn.addEventListener("click", () => modal.close());
 
@@ -438,6 +588,7 @@ function openVideoFormModal(videoToEdit = null, onSaved = null) {
         const title = modalEl.querySelector("#video-title").value.trim();
         const youtubeUrl = modalEl.querySelector("#video-url").value.trim();
         const category = modalEl.querySelector("#video-category").value;
+        const publishStatus = modalEl.querySelector("#video-publish-status").value;
         const views = modalEl.querySelector("#video-views").value.trim() || "0 views";
         const uploadDate = modalEl.querySelector("#video-date").value.trim() || "Recently";
         const thumbnail = modalEl.querySelector("#video-thumbnail").value.trim();
@@ -468,6 +619,7 @@ function openVideoFormModal(videoToEdit = null, onSaved = null) {
           youtubeUrl,
           youtubeId,
           category,
+          publishStatus,
           views,
           uploadDate,
           thumbnail,
