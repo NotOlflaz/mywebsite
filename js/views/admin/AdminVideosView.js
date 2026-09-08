@@ -175,6 +175,22 @@ export function renderAdminVideosView() {
         </div>
       `}
 
+      <!-- Sticky Quick Action Bar -->
+      <div class="admin-sticky-bar">
+        <div class="admin-sticky-bar-left">
+          <span style="color: var(--status-active-text);">${getIcon('sparkles', 14)}</span>
+          <span>${allVideos.length} total videos (${filteredVideos.length} shown) &bull; Drag ⠿ rows to reorder.</span>
+        </div>
+        <div class="admin-sticky-bar-right">
+          <a href="#/videos" target="_blank" class="btn btn-outline">
+            ${getIcon('eye', 13)} View Public Videos
+          </a>
+          <button type="button" class="btn btn-primary" id="sticky-add-video-btn">
+            ${getIcon('plus', 14)} Add New Video
+          </button>
+        </div>
+      </div>
+
     </div>
   `;
 }
@@ -183,6 +199,14 @@ export function renderAdminVideosView() {
  * Event handlers for video CRUD and Drag & Drop
  */
 export function initAdminVideosEvents(reRenderCallback) {
+  // Sticky Add Video button
+  const stickyAddBtn = document.getElementById("sticky-add-video-btn");
+  if (stickyAddBtn) {
+    stickyAddBtn.addEventListener("click", () => {
+      openVideoFormModal(null, reRenderCallback);
+    });
+  }
+
   // Initialize Drag & Drop Table Reordering
   const tbody = document.getElementById("admin-videos-tbody");
   if (tbody) {

@@ -232,6 +232,22 @@ export function renderAdminDashboardView() {
 
       </div>
 
+      <!-- Sticky Quick Navigation Bar -->
+      <div class="admin-sticky-bar">
+        <div class="admin-sticky-bar-left">
+          <span style="color: var(--status-active-text);">${getIcon('sparkles', 14)}</span>
+          <span>System Status: Local CMS Store Active &bull; ${metrics.totalProjects} Projects &bull; ${metrics.totalVideos} Videos &bull; ${metrics.totalPortfolio} Portfolio items</span>
+        </div>
+        <div class="admin-sticky-bar-right">
+          <a href="#/admin/appearance" class="btn btn-outline">
+            ${getIcon('palette', 14)} Theme Settings
+          </a>
+          <a href="#/" target="_blank" class="btn btn-primary">
+            ${getIcon('eye', 13)} View Live Site ↗
+          </a>
+        </div>
+      </div>
+
     </div>
   `;
 }

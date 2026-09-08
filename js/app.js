@@ -220,16 +220,22 @@ router.addRoute("/admin/portfolio", () => {
 
 // WEBSITE: Home Page Editor
 router.addRoute("/admin/home", () => {
-  renderAdminPage("#/admin/home", "Home Page", renderAdminHomeView(), () => {
-    initAdminHomeEvents();
-  });
+  const render = () => {
+    renderAdminPage("#/admin/home", "Home Page", renderAdminHomeView(), () => {
+      initAdminHomeEvents(render);
+    });
+  };
+  render();
 });
 
 // WEBSITE: About Page Editor
 router.addRoute("/admin/about", () => {
-  renderAdminPage("#/admin/about", "About Page", renderAdminAboutView(), () => {
-    initAdminAboutEvents();
-  });
+  const render = () => {
+    renderAdminPage("#/admin/about", "About Page", renderAdminAboutView(), () => {
+      initAdminAboutEvents(render);
+    });
+  };
+  render();
 });
 
 // WEBSITE: Featured Content Curation
@@ -264,16 +270,22 @@ router.addRoute("/admin/appearance", () => {
 
 // SETTINGS: Channel Statistics
 router.addRoute("/admin/channel", () => {
-  renderAdminPage("#/admin/channel", "Channel Stats", renderAdminChannelView(), () => {
-    initAdminChannelEvents();
-  });
+  const render = () => {
+    renderAdminPage("#/admin/channel", "Channel Stats", renderAdminChannelView(), () => {
+      initAdminChannelEvents(render);
+    });
+  };
+  render();
 });
 
 // SETTINGS: Social Links
 router.addRoute("/admin/social", () => {
-  renderAdminPage("#/admin/social", "Social Links", renderAdminSocialView(), () => {
-    initAdminSocialEvents();
-  });
+  const render = () => {
+    renderAdminPage("#/admin/social", "Social Links", renderAdminSocialView(), () => {
+      initAdminSocialEvents(render);
+    });
+  };
+  render();
 });
 
 // SETTINGS: Site Settings & SEO

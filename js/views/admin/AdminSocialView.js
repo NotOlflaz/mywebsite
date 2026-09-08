@@ -90,10 +90,20 @@ export function renderAdminSocialView() {
           </div>
         </div>
 
-        <div style="display: flex; justify-content: flex-end; margin-top: var(--space-lg);">
-          <button type="submit" class="btn btn-primary btn-lg" id="save-social-btn">
-            Save Social Links
-          </button>
+        <!-- Sticky Action & Save Bar -->
+        <div class="admin-sticky-bar">
+          <div class="admin-sticky-bar-left">
+            <span style="color: var(--status-active-text);">●</span>
+            <span>Social links update across the header, about page, and footer.</span>
+          </div>
+          <div class="admin-sticky-bar-right">
+            <button type="button" class="btn btn-outline" id="discard-social-btn">
+              Discard Changes
+            </button>
+            <button type="submit" class="btn btn-primary" id="save-social-btn">
+              💾 Save Social Links
+            </button>
+          </div>
         </div>
 
       </form>
@@ -102,9 +112,17 @@ export function renderAdminSocialView() {
   `;
 }
 
-export function initAdminSocialEvents() {
+export function initAdminSocialEvents(reRenderCallback) {
   const form = document.getElementById("admin-social-form");
   if (form) {
+    const discardBtn = document.getElementById("discard-social-btn");
+    if (discardBtn) {
+      discardBtn.addEventListener("click", () => {
+        if (reRenderCallback) reRenderCallback();
+        toast.info("Social link edits discarded.");
+      });
+    }
+
     form.addEventListener("submit", (e) => {
       e.preventDefault();
       const saveBtn = document.getElementById("save-social-btn");

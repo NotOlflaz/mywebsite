@@ -142,11 +142,34 @@ export function renderAdminFeaturedView() {
         </div>
       </div>
 
+      <!-- Sticky Action Bar -->
+      <div class="admin-sticky-bar">
+        <div class="admin-sticky-bar-left">
+          <span style="color: var(--status-active-text);">${getIcon('sparkles', 14)}</span>
+          <span>Featured spotlights sequence #1, #2... directly on the Home page.</span>
+        </div>
+        <div class="admin-sticky-bar-right">
+          <a href="#/" target="_blank" class="btn btn-outline">
+            ${getIcon('eye', 13)} Preview Live
+          </a>
+          <button type="button" class="btn btn-primary" id="btn-refresh-featured">
+            💾 Save & Refresh Order
+          </button>
+        </div>
+      </div>
+
     </div>
   `;
 }
 
 export function initAdminFeaturedEvents(reRenderCallback) {
+  const refreshBtn = document.getElementById("btn-refresh-featured");
+  if (refreshBtn) {
+    refreshBtn.addEventListener("click", () => {
+      toast.success("Featured curation confirmed and active on homepage!");
+      if (reRenderCallback) reRenderCallback();
+    });
+  }
   // Drag & drop for Featured Projects
   const projContainer = document.getElementById("featured-projects-sortable-list");
   if (projContainer) {

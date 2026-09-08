@@ -170,6 +170,22 @@ export function renderAdminProjectsView() {
         </div>
       `}
 
+      <!-- Sticky Quick Action Bar -->
+      <div class="admin-sticky-bar">
+        <div class="admin-sticky-bar-left">
+          <span style="color: var(--status-active-text);">${getIcon('sparkles', 14)}</span>
+          <span>${allProjects.length} total projects (${filteredProjects.length} shown) &bull; Drag ⠿ to reorder.</span>
+        </div>
+        <div class="admin-sticky-bar-right">
+          <a href="#/projects" target="_blank" class="btn btn-outline">
+            ${getIcon('eye', 13)} View Public Catalog
+          </a>
+          <button type="button" class="btn btn-primary" id="sticky-add-project-btn">
+            ${getIcon('plus', 14)} Add New Project
+          </button>
+        </div>
+      </div>
+
     </div>
   `;
 }
@@ -178,6 +194,14 @@ export function renderAdminProjectsView() {
  * Event handlers for Project CRUD and Drag & Drop
  */
 export function initAdminProjectsEvents(reRenderCallback) {
+  // Sticky Add Project Button
+  const stickyAddBtn = document.getElementById("sticky-add-project-btn");
+  if (stickyAddBtn) {
+    stickyAddBtn.addEventListener("click", () => {
+      openProjectFormModal(null, reRenderCallback);
+    });
+  }
+
   // Initialize Drag & Drop Table Reordering
   const tbody = document.getElementById("admin-projects-tbody");
   if (tbody) {

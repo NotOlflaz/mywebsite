@@ -146,11 +146,35 @@ export function renderAdminPortfolioView() {
         </div>
       `}
 
+      <!-- Sticky Quick Action Bar -->
+      <div class="admin-sticky-bar">
+        <div class="admin-sticky-bar-left">
+          <span style="color: var(--status-active-text);">${getIcon('sparkles', 14)}</span>
+          <span>${items.length} total portfolio case studies (${filteredItems.length} shown) &bull; Drag ⠿ to reorder.</span>
+        </div>
+        <div class="admin-sticky-bar-right">
+          <a href="#/portfolio" target="_blank" class="btn btn-outline">
+            ${getIcon('eye', 13)} View Public Portfolio
+          </a>
+          <button type="button" class="btn btn-primary" id="sticky-add-port-btn">
+            ${getIcon('plus', 14)} Add Portfolio Item
+          </button>
+        </div>
+      </div>
+
     </div>
   `;
 }
 
 export function initAdminPortfolioEvents(reRenderCallback) {
+  // Sticky Add Portfolio Item
+  const stickyAddBtn = document.getElementById("sticky-add-port-btn");
+  if (stickyAddBtn) {
+    stickyAddBtn.addEventListener("click", () => {
+      openPortfolioFormModal(null, reRenderCallback);
+    });
+  }
+
   // Initialize Drag & Drop Table Reordering
   const tbody = document.getElementById("admin-portfolio-tbody");
   if (tbody) {

@@ -220,11 +220,22 @@ export function renderAdminSettingsView() {
           </div>
         </div>
 
-        <div style="display: flex; justify-content: flex-end; margin-bottom: var(--space-2xl);">
-          <button type="submit" class="btn btn-primary btn-lg" id="save-settings-btn">
-            Save All Settings
-          </button>
+        <!-- Sticky Action & Save Bar -->
+        <div class="admin-sticky-bar">
+          <div class="admin-sticky-bar-left">
+            <span style="color: var(--status-active-text);">${getIcon('sparkles', 14)}</span>
+            <span>Site, SEO, and social settings update live across all pages.</span>
+          </div>
+          <div class="admin-sticky-bar-right">
+            <button type="button" class="btn btn-outline" id="discard-settings-btn">
+              Discard Changes
+            </button>
+            <button type="submit" class="btn btn-primary" id="save-settings-btn">
+              💾 Save All Settings
+            </button>
+          </div>
         </div>
+
       </form>
 
       <!-- 6. CMS DATA MANAGEMENT & BACKUPS -->
@@ -307,6 +318,15 @@ export function initAdminSettingsEvents(reRenderCallback) {
   // Initialize Image Uploaders
   initImageUploader(document, "setting-avatar");
   initImageUploader(document, "setting-socialimage");
+
+  // Discard Button
+  const discardBtn = document.getElementById("discard-settings-btn");
+  if (discardBtn) {
+    discardBtn.addEventListener("click", () => {
+      if (reRenderCallback) reRenderCallback();
+      toast.info("Site settings edits discarded.");
+    });
+  }
 
   // Settings Form Submit
   const form = document.getElementById("admin-settings-form");

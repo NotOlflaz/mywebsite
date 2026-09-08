@@ -124,10 +124,20 @@ export function renderAdminAboutView() {
           </div>
         </div>
 
-        <div style="display: flex; justify-content: flex-end; margin-top: var(--space-lg);">
-          <button type="submit" class="btn btn-primary btn-lg" id="save-about-btn">
-            Save About Information
-          </button>
+        <!-- Sticky Action & Save Bar -->
+        <div class="admin-sticky-bar">
+          <div class="admin-sticky-bar-left">
+            <span style="color: var(--status-active-text);">${getIcon('sparkles', 14)}</span>
+            <span>Profile and biography changes save persistently.</span>
+          </div>
+          <div class="admin-sticky-bar-right">
+            <button type="button" class="btn btn-outline" id="discard-about-btn">
+              Discard Changes
+            </button>
+            <button type="submit" class="btn btn-primary" id="save-about-btn">
+              💾 Save About Information
+            </button>
+          </div>
         </div>
 
       </form>
@@ -136,11 +146,20 @@ export function renderAdminAboutView() {
   `;
 }
 
-export function initAdminAboutEvents() {
+export function initAdminAboutEvents(reRenderCallback) {
   const form = document.getElementById("admin-about-form");
   if (form) {
     // Initialize Image Uploader for avatar
     initImageUploader(form, "about-avatar");
+
+    // Discard Button
+    const discardBtn = document.getElementById("discard-about-btn");
+    if (discardBtn) {
+      discardBtn.addEventListener("click", () => {
+        if (reRenderCallback) reRenderCallback();
+        toast.info("About page edits discarded.");
+      });
+    }
 
     form.addEventListener("submit", (e) => {
       e.preventDefault();

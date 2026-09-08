@@ -167,11 +167,20 @@ export function renderAdminHomeView() {
           </div>
         </div>
 
-        <!-- Save Button Bar -->
-        <div style="display: flex; justify-content: flex-end; gap: var(--space-sm); margin-top: var(--space-lg);">
-          <button type="submit" class="btn btn-primary btn-lg" id="save-home-btn">
-            Save Home Page Content
-          </button>
+        <!-- Sticky Action & Save Bar -->
+        <div class="admin-sticky-bar">
+          <div class="admin-sticky-bar-left">
+            <span style="color: var(--status-active-text);">${getIcon('sparkles', 14)}</span>
+            <span>Home layout changes save locally and sync to the live public site.</span>
+          </div>
+          <div class="admin-sticky-bar-right">
+            <button type="button" class="btn btn-outline" id="discard-home-btn">
+              Discard Changes
+            </button>
+            <button type="submit" class="btn btn-primary" id="save-home-btn">
+              💾 Save Home Page Content
+            </button>
+          </div>
         </div>
 
       </form>
@@ -227,6 +236,15 @@ export function initAdminHomeEvents(reRenderCallback) {
   if (form) {
     // Initialize Image Uploader for Home Hero Avatar
     initImageUploader(form, "home-avatar-url");
+
+    // Discard Button
+    const discardBtn = document.getElementById("discard-home-btn");
+    if (discardBtn) {
+      discardBtn.addEventListener("click", () => {
+        if (reRenderCallback) reRenderCallback();
+        toast.info("Home page edits discarded.");
+      });
+    }
 
     form.addEventListener("submit", (e) => {
       e.preventDefault();

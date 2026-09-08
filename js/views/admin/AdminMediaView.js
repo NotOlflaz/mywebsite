@@ -100,11 +100,32 @@ export function renderAdminMediaView() {
         </div>
       `}
 
+      <!-- Sticky Quick Action Bar -->
+      <div class="admin-sticky-bar">
+        <div class="admin-sticky-bar-left">
+          <span style="color: var(--status-active-text);">${getIcon('sparkles', 14)}</span>
+          <span>${allMedia.length} total media assets (${filteredMedia.length} shown) stored locally.</span>
+        </div>
+        <div class="admin-sticky-bar-right">
+          <button type="button" class="btn btn-primary" id="sticky-add-media-btn">
+            ${getIcon('plus', 14)} Register New Asset
+          </button>
+        </div>
+      </div>
+
     </div>
   `;
 }
 
 export function initAdminMediaEvents(reRenderCallback) {
+  // Sticky Add Media button
+  const stickyAddBtn = document.getElementById("sticky-add-media-btn");
+  if (stickyAddBtn) {
+    stickyAddBtn.addEventListener("click", () => {
+      openMediaFormModal(null, reRenderCallback);
+    });
+  }
+
   // Search
   const searchInput = document.getElementById("admin-media-search-input");
   if (searchInput) {

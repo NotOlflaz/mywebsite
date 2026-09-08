@@ -679,12 +679,12 @@ export function renderAdminAppearanceView() {
       </section>
 
       <!-- BOTTOM SAVE & PERSISTENCE BAR -->
-      <div style="position: sticky; bottom: var(--space-lg); z-index: 30; background: rgba(8, 9, 12, 0.95); backdrop-filter: blur(16px); padding: var(--space-md) var(--space-lg); border: 1px solid var(--border-hover); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); display: flex; align-items: center; justify-content: space-between; gap: var(--space-md); margin-top: var(--space-2xl);">
-        <div class="flex items-center gap-xs text-xs text-muted">
+      <div class="admin-sticky-bar">
+        <div class="admin-sticky-bar-left">
           <span style="color: var(--status-active-text);">${getIcon('sparkles', 14)}</span>
-          <span>Changes are reflected on the public website and saved locally.</span>
+          <span>Theme and appearance tweaks are active live and saved locally.</span>
         </div>
-        <div class="flex items-center gap-xs">
+        <div class="admin-sticky-bar-right">
           <button type="button" class="btn btn-outline" id="btn-revert-all-changes">
             Discard Changes
           </button>

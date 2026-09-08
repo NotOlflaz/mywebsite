@@ -80,10 +80,20 @@ export function renderAdminChannelView() {
           </div>
         </div>
 
-        <div style="display: flex; justify-content: flex-end; margin-top: var(--space-lg);">
-          <button type="submit" class="btn btn-primary btn-lg" id="save-channel-btn">
-            Save Channel Statistics
-          </button>
+        <!-- Sticky Action & Save Bar -->
+        <div class="admin-sticky-bar">
+          <div class="admin-sticky-bar-left">
+            <span style="color: var(--status-active-text);">${getIcon('sparkles', 14)}</span>
+            <span>Channel metrics are displayed on the public Home page.</span>
+          </div>
+          <div class="admin-sticky-bar-right">
+            <button type="button" class="btn btn-outline" id="discard-channel-btn">
+              Discard Changes
+            </button>
+            <button type="submit" class="btn btn-primary" id="save-channel-btn">
+              💾 Save Channel Statistics
+            </button>
+          </div>
         </div>
 
       </form>
@@ -92,9 +102,17 @@ export function renderAdminChannelView() {
   `;
 }
 
-export function initAdminChannelEvents() {
+export function initAdminChannelEvents(reRenderCallback) {
   const form = document.getElementById("admin-channel-form");
   if (form) {
+    const discardBtn = document.getElementById("discard-channel-btn");
+    if (discardBtn) {
+      discardBtn.addEventListener("click", () => {
+        if (reRenderCallback) reRenderCallback();
+        toast.info("Channel statistics edits discarded.");
+      });
+    }
+
     form.addEventListener("submit", (e) => {
       e.preventDefault();
       const saveBtn = document.getElementById("save-channel-btn");
