@@ -35,10 +35,16 @@ export function renderAdminProjectsView() {
 
     return `
       <tr class="draggable-row" data-id="${project.id}" data-index="${idx}" id="admin-proj-row-${project.id}">
-        <td style="width: 38px; text-align: center;">
-          <span class="drag-handle" title="Drag to reorder project display sequence">
-            ${getIcon('dragHandle', 16)}
-          </span>
+        <td style="width: 52px; text-align: center;">
+          <div class="flex items-center justify-center gap-2xs">
+            <span class="drag-handle" title="Drag to reorder project display sequence">
+              ${getIcon('dragHandle', 16)}
+            </span>
+            <div class="reorder-arrow-buttons">
+              <button type="button" class="btn-reorder-move btn-move-project" data-id="${project.id}" data-action="up" title="Move Up" ${idx === 0 ? 'disabled' : ''}>▲</button>
+              <button type="button" class="btn-reorder-move btn-move-project" data-id="${project.id}" data-action="down" title="Move Down" ${idx === filteredProjects.length - 1 ? 'disabled' : ''}>▼</button>
+            </div>
+          </div>
         </td>
         <td>
           <div class="flex items-center gap-sm">
@@ -141,7 +147,7 @@ export function renderAdminProjectsView() {
           <table class="data-table" id="admin-projects-table">
             <thead>
               <tr>
-                <th style="width: 38px;"></th>
+                <th style="width: 52px; text-align: center;">Order</th>
                 <th>Project Name & Summary</th>
                 <th>Category</th>
                 <th>Engine</th>
@@ -174,7 +180,7 @@ export function renderAdminProjectsView() {
       <div class="admin-sticky-bar">
         <div class="admin-sticky-bar-left">
           <span style="color: var(--status-active-text);">${getIcon('sparkles', 14)}</span>
-          <span>${allProjects.length} total projects (${filteredProjects.length} shown) &bull; Drag ⠿ to reorder.</span>
+          <span>${allProjects.length} total projects (${filteredProjects.length} shown) &bull; Drag ⠿ rows or click ▲/▼ to reorder.</span>
         </div>
         <div class="admin-sticky-bar-right">
           <a href="#/projects" target="_blank" class="btn btn-outline">
@@ -209,13 +215,29 @@ export function initAdminProjectsEvents(reRenderCallback) {
       container: tbody,
       itemSelector: "tr.draggable-row",
       handleSelector: ".drag-handle",
-      onReorder: (fromIdx, toIdx) => {
-        store.reorderProjects(fromIdx, toIdx);
-        toast.info("Project display sequence updated!");
+      onReorder: (fromIdx, toIdx, fromId, toId) => {
+        if (fromId && toId) {
+          store.reorderProjects(fromId, toId);
+        } else {
+          store.reorderProjects(fromIdx, toIdx);
+        }
+        toast.success("Project display sequence updated!");
         if (reRenderCallback) reRenderCallback();
       }
     });
   }
+
+  // Quick Move Up / Down Buttons
+  document.querySelectorAll(".btn-move-project").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const id = btn.getAttribute("data-id");
+      const action = btn.getAttribute("data-action");
+      store.moveProject(id, action);
+      toast.info(`Project moved ${action}!`);
+      if (reRenderCallback) reRenderCallback();
+    });
+  });
 
   // Search & Filter
   const searchInput = document.getElementById("admin-proj-search-input");

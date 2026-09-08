@@ -17,9 +17,15 @@ export function renderAdminHomeView() {
   const sectionsHtml = sections.map((sec, idx) => `
     <div class="home-section-card draggable-card ${sec.enabled ? '' : 'is-disabled'}" data-id="${sec.id}" data-index="${idx}" id="section-card-${sec.id}">
       <div class="flex items-center gap-sm" style="flex: 1;">
-        <span class="drag-handle" title="Drag to reorder section sequence on homepage">
-          ${getIcon('dragHandle', 16)}
-        </span>
+        <div class="flex items-center gap-2xs">
+          <span class="drag-handle" title="Drag to reorder section sequence on homepage">
+            ${getIcon('dragHandle', 16)}
+          </span>
+          <div class="reorder-arrow-buttons">
+            <button type="button" class="btn-reorder-move btn-move-home-section" data-id="${sec.id}" data-action="up" title="Move Up" ${idx === 0 ? 'disabled' : ''}>▲</button>
+            <button type="button" class="btn-reorder-move btn-move-home-section" data-id="${sec.id}" data-action="down" title="Move Down" ${idx === sections.length - 1 ? 'disabled' : ''}>▼</button>
+          </div>
+        </div>
         <div style="flex: 1;">
           <div class="flex items-center gap-xs">
             <strong style="color: var(--text-main); font-size: var(--text-sm);">${sec.name}</strong>
@@ -197,11 +203,27 @@ export function initAdminHomeEvents(reRenderCallback) {
       container: sectionsContainer,
       itemSelector: ".draggable-card",
       handleSelector: ".drag-handle",
-      onReorder: (fromIdx, toIdx) => {
-        store.reorderHomeSections(fromIdx, toIdx);
+      onReorder: (fromIdx, toIdx, fromId, toId) => {
+        if (fromId && toId) {
+          store.reorderHomeSections(fromId, toId);
+        } else {
+          store.reorderHomeSections(fromIdx, toIdx);
+        }
         toast.info("Homepage section order updated!");
         if (reRenderCallback) reRenderCallback();
       }
+    });
+
+    // Quick move buttons for Home Sections
+    sectionsContainer.querySelectorAll(".btn-move-home-section").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const id = btn.getAttribute("data-id");
+        const action = btn.getAttribute("data-action");
+        store.moveHomeSection(id, action);
+        toast.info(`Section moved ${action}!`);
+        if (reRenderCallback) reRenderCallback();
+      });
     });
 
     // Section Enabled Toggles

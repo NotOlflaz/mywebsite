@@ -37,10 +37,16 @@ export function renderAdminVideosView() {
 
     return `
       <tr class="draggable-row" data-id="${video.id}" data-index="${idx}" id="admin-video-row-${video.id}">
-        <td style="width: 38px; text-align: center;">
-          <span class="drag-handle" title="Drag to reorder video display sequence">
-            ${getIcon('dragHandle', 16)}
-          </span>
+        <td style="width: 52px; text-align: center;">
+          <div class="flex items-center justify-center gap-2xs">
+            <span class="drag-handle" title="Drag to reorder video display sequence">
+              ${getIcon('dragHandle', 16)}
+            </span>
+            <div class="reorder-arrow-buttons">
+              <button type="button" class="btn-reorder-move btn-move-video" data-id="${video.id}" data-action="up" title="Move Up" ${idx === 0 ? 'disabled' : ''}>▲</button>
+              <button type="button" class="btn-reorder-move btn-move-video" data-id="${video.id}" data-action="down" title="Move Down" ${idx === filteredVideos.length - 1 ? 'disabled' : ''}>▼</button>
+            </div>
+          </div>
         </td>
         <td>
           <div class="flex items-center gap-sm">
@@ -146,7 +152,7 @@ export function renderAdminVideosView() {
           <table class="data-table" id="admin-videos-table">
             <thead>
               <tr>
-                <th style="width: 38px;"></th>
+                <th style="width: 52px; text-align: center;">Order</th>
                 <th>Video Title & Details</th>
                 <th>Category</th>
                 <th>Status</th>
@@ -179,7 +185,7 @@ export function renderAdminVideosView() {
       <div class="admin-sticky-bar">
         <div class="admin-sticky-bar-left">
           <span style="color: var(--status-active-text);">${getIcon('sparkles', 14)}</span>
-          <span>${allVideos.length} total videos (${filteredVideos.length} shown) &bull; Drag ⠿ rows to reorder.</span>
+          <span>${allVideos.length} total videos (${filteredVideos.length} shown) &bull; Drag ⠿ rows or click ▲/▼ to reorder.</span>
         </div>
         <div class="admin-sticky-bar-right">
           <a href="#/videos" target="_blank" class="btn btn-outline">
@@ -214,13 +220,30 @@ export function initAdminVideosEvents(reRenderCallback) {
       container: tbody,
       itemSelector: "tr.draggable-row",
       handleSelector: ".drag-handle",
-      onReorder: (fromIdx, toIdx) => {
-        store.reorderVideos(fromIdx, toIdx);
-        toast.info("Video sequence updated!");
+      onReorder: (fromIdx, toIdx, fromId, toId) => {
+        if (fromId && toId) {
+          store.reorderVideos(fromId, toId);
+        } else {
+          store.reorderVideos(fromIdx, toIdx);
+        }
+        toast.success("Video sequence updated!");
         if (reRenderCallback) reRenderCallback();
       }
     });
   }
+
+  // Quick Move Up / Down Buttons
+  document.querySelectorAll(".btn-move-video").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const id = btn.getAttribute("data-id");
+      const action = btn.getAttribute("data-action");
+      store.moveVideo(id, action);
+      toast.info(`Video moved ${action}!`);
+      if (reRenderCallback) reRenderCallback();
+    });
+  });
+
 
   // Search & Filter
   const searchInput = document.getElementById("admin-video-search-input");

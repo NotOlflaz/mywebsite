@@ -21,9 +21,15 @@ export function renderAdminFeaturedView() {
   const featuredProjectsListHtml = featuredProjects.length > 0 ? featuredProjects.map((p, idx) => `
     <div class="home-section-card draggable-card" data-id="${p.id}" data-index="${idx}" id="featured-proj-card-${p.id}">
       <div class="flex items-center gap-sm">
-        <span class="drag-handle" title="Drag to change display sequence">
-          ${getIcon('dragHandle', 16)}
-        </span>
+        <div class="flex items-center gap-2xs">
+          <span class="drag-handle" title="Drag to change display sequence">
+            ${getIcon('dragHandle', 16)}
+          </span>
+          <div class="reorder-arrow-buttons">
+            <button type="button" class="btn-reorder-move btn-move-featured-proj" data-id="${p.id}" data-action="up" title="Move Up" ${idx === 0 ? 'disabled' : ''}>▲</button>
+            <button type="button" class="btn-reorder-move btn-move-featured-proj" data-id="${p.id}" data-action="down" title="Move Down" ${idx === featuredProjects.length - 1 ? 'disabled' : ''}>▼</button>
+          </div>
+        </div>
         <span class="badge badge-featured font-mono" style="font-size: 11px; padding: 2px 8px;">
           #${idx + 1}
         </span>
@@ -48,9 +54,15 @@ export function renderAdminFeaturedView() {
   const featuredVideosListHtml = featuredVideos.length > 0 ? featuredVideos.map((v, idx) => `
     <div class="home-section-card draggable-card" data-id="${v.id}" data-index="${idx}" id="featured-vid-card-${v.id}">
       <div class="flex items-center gap-sm">
-        <span class="drag-handle" title="Drag to change display sequence">
-          ${getIcon('dragHandle', 16)}
-        </span>
+        <div class="flex items-center gap-2xs">
+          <span class="drag-handle" title="Drag to change display sequence">
+            ${getIcon('dragHandle', 16)}
+          </span>
+          <div class="reorder-arrow-buttons">
+            <button type="button" class="btn-reorder-move btn-move-featured-vid" data-id="${v.id}" data-action="up" title="Move Up" ${idx === 0 ? 'disabled' : ''}>▲</button>
+            <button type="button" class="btn-reorder-move btn-move-featured-vid" data-id="${v.id}" data-action="down" title="Move Down" ${idx === featuredVideos.length - 1 ? 'disabled' : ''}>▼</button>
+          </div>
+        </div>
         <span class="badge badge-featured font-mono" style="font-size: 11px; padding: 2px 8px;">
           #${idx + 1}
         </span>
@@ -92,7 +104,7 @@ export function renderAdminFeaturedView() {
           <div class="form-section-title">
             <span>Featured Projects Order (${featuredProjects.length} Active)</span>
           </div>
-          <span class="text-xs text-muted">Drag ⠿ to reorder positions</span>
+          <span class="text-xs text-muted">Drag ⠿ rows or click ▲/▼ to reorder</span>
         </div>
         <div class="form-section-body">
           <div style="display: flex; flex-direction: column; gap: var(--space-xs);" id="featured-projects-sortable-list">
@@ -120,7 +132,7 @@ export function renderAdminFeaturedView() {
           <div class="form-section-title">
             <span>Featured Videos Order (${featuredVideos.length} Active)</span>
           </div>
-          <span class="text-xs text-muted">Drag ⠿ to reorder positions</span>
+          <span class="text-xs text-muted">Drag ⠿ rows or click ▲/▼ to reorder</span>
         </div>
         <div class="form-section-body">
           <div style="display: flex; flex-direction: column; gap: var(--space-xs);" id="featured-videos-sortable-list">
@@ -146,7 +158,7 @@ export function renderAdminFeaturedView() {
       <div class="admin-sticky-bar">
         <div class="admin-sticky-bar-left">
           <span style="color: var(--status-active-text);">${getIcon('sparkles', 14)}</span>
-          <span>Featured spotlights sequence #1, #2... directly on the Home page.</span>
+          <span>Featured spotlights sequence #1, #2... directly on the Home page. Drag ⠿ or click ▲/▼.</span>
         </div>
         <div class="admin-sticky-bar-right">
           <a href="#/" target="_blank" class="btn btn-outline">
@@ -177,13 +189,29 @@ export function initAdminFeaturedEvents(reRenderCallback) {
       container: projContainer,
       itemSelector: ".draggable-card",
       handleSelector: ".drag-handle",
-      onReorder: (fromIdx, toIdx) => {
-        store.reorderFeaturedProjects(fromIdx, toIdx);
+      onReorder: (fromIdx, toIdx, fromId, toId) => {
+        if (fromId && toId) {
+          store.reorderFeaturedProjects(fromId, toId);
+        } else {
+          store.reorderFeaturedProjects(fromIdx, toIdx);
+        }
         toast.info("Featured projects sequence updated!");
         if (reRenderCallback) reRenderCallback();
       }
     });
   }
+
+  // Quick move buttons for Featured Projects
+  document.querySelectorAll(".btn-move-featured-proj").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const id = btn.getAttribute("data-id");
+      const action = btn.getAttribute("data-action");
+      store.moveFeaturedProject(id, action);
+      toast.info(`Featured project moved ${action}!`);
+      if (reRenderCallback) reRenderCallback();
+    });
+  });
 
   // Drag & drop for Featured Videos
   const vidContainer = document.getElementById("featured-videos-sortable-list");
@@ -192,13 +220,29 @@ export function initAdminFeaturedEvents(reRenderCallback) {
       container: vidContainer,
       itemSelector: ".draggable-card",
       handleSelector: ".drag-handle",
-      onReorder: (fromIdx, toIdx) => {
-        store.reorderFeaturedVideos(fromIdx, toIdx);
+      onReorder: (fromIdx, toIdx, fromId, toId) => {
+        if (fromId && toId) {
+          store.reorderFeaturedVideos(fromId, toId);
+        } else {
+          store.reorderFeaturedVideos(fromIdx, toIdx);
+        }
         toast.info("Featured videos sequence updated!");
         if (reRenderCallback) reRenderCallback();
       }
     });
   }
+
+  // Quick move buttons for Featured Videos
+  document.querySelectorAll(".btn-move-featured-vid").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const id = btn.getAttribute("data-id");
+      const action = btn.getAttribute("data-action");
+      store.moveFeaturedVideo(id, action);
+      toast.info(`Featured video moved ${action}!`);
+      if (reRenderCallback) reRenderCallback();
+    });
+  });
 
   // Add / Remove Project Featured
   document.querySelectorAll(".add-to-featured-proj-btn, .remove-featured-proj-btn").forEach(btn => {

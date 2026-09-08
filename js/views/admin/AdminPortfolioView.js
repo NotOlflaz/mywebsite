@@ -29,10 +29,16 @@ export function renderAdminPortfolioView() {
 
     return `
       <tr class="draggable-row" data-id="${item.id}" data-index="${idx}" id="admin-port-row-${item.id}">
-        <td style="width: 38px; text-align: center;">
-          <span class="drag-handle" title="Drag to reorder portfolio display sequence">
-            ${getIcon('dragHandle', 16)}
-          </span>
+        <td style="width: 52px; text-align: center;">
+          <div class="flex items-center justify-center gap-2xs">
+            <span class="drag-handle" title="Drag to reorder portfolio display sequence">
+              ${getIcon('dragHandle', 16)}
+            </span>
+            <div class="reorder-arrow-buttons">
+              <button type="button" class="btn-reorder-move btn-move-portfolio" data-id="${item.id}" data-action="up" title="Move Up" ${idx === 0 ? 'disabled' : ''}>▲</button>
+              <button type="button" class="btn-reorder-move btn-move-portfolio" data-id="${item.id}" data-action="down" title="Move Down" ${idx === filteredItems.length - 1 ? 'disabled' : ''}>▼</button>
+            </div>
+          </div>
         </td>
         <td>
           <div class="flex items-center gap-sm">
@@ -118,7 +124,7 @@ export function renderAdminPortfolioView() {
           <table class="data-table" id="admin-portfolio-table">
             <thead>
               <tr>
-                <th style="width: 38px;"></th>
+                <th style="width: 52px; text-align: center;">Order</th>
                 <th>Title & Tech</th>
                 <th>Category</th>
                 <th>Status</th>
@@ -150,7 +156,7 @@ export function renderAdminPortfolioView() {
       <div class="admin-sticky-bar">
         <div class="admin-sticky-bar-left">
           <span style="color: var(--status-active-text);">${getIcon('sparkles', 14)}</span>
-          <span>${items.length} total portfolio case studies (${filteredItems.length} shown) &bull; Drag ⠿ to reorder.</span>
+          <span>${items.length} total portfolio case studies (${filteredItems.length} shown) &bull; Drag ⠿ rows or click ▲/▼ to reorder.</span>
         </div>
         <div class="admin-sticky-bar-right">
           <a href="#/portfolio" target="_blank" class="btn btn-outline">
@@ -182,13 +188,29 @@ export function initAdminPortfolioEvents(reRenderCallback) {
       container: tbody,
       itemSelector: "tr.draggable-row",
       handleSelector: ".drag-handle",
-      onReorder: (fromIdx, toIdx) => {
-        store.reorderPortfolio(fromIdx, toIdx);
-        toast.info("Portfolio sequence updated!");
+      onReorder: (fromIdx, toIdx, fromId, toId) => {
+        if (fromId && toId) {
+          store.reorderPortfolio(fromId, toId);
+        } else {
+          store.reorderPortfolio(fromIdx, toIdx);
+        }
+        toast.success("Portfolio sequence updated!");
         if (reRenderCallback) reRenderCallback();
       }
     });
   }
+
+  // Quick Move Up / Down Buttons
+  document.querySelectorAll(".btn-move-portfolio").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const id = btn.getAttribute("data-id");
+      const action = btn.getAttribute("data-action");
+      store.movePortfolio(id, action);
+      toast.info(`Portfolio moved ${action}!`);
+      if (reRenderCallback) reRenderCallback();
+    });
+  });
 
   // Filter tabs
   const tabBtns = document.querySelectorAll(".port-filter-tab");

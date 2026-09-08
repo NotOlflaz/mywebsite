@@ -800,6 +800,11 @@
   transition: color var(--dur-fast) ease, background-color var(--dur-fast) ease;
 }
 
+.drag-handle svg,
+.drag-handle path {
+  pointer-events: none;
+}
+
 .drag-handle:hover {
   color: var(--accent-primary);
   background-color: var(--bg-surface-alt);
@@ -822,14 +827,54 @@
 
 .draggable-row.drop-target-above,
 .draggable-card.drop-target-above {
-  border-top: 2px solid var(--accent-primary) !important;
-  box-shadow: 0 -3px 8px rgba(56, 189, 248, 0.3);
+  border-top: 3px solid var(--accent-primary) !important;
+  box-shadow: 0 -4px 14px rgba(56, 189, 248, 0.4);
+}
+
+.draggable-row.drop-target-above > td {
+  border-top: 3px solid var(--accent-primary) !important;
 }
 
 .draggable-row.drop-target-below,
 .draggable-card.drop-target-below {
-  border-bottom: 2px solid var(--accent-primary) !important;
-  box-shadow: 0 3px 8px rgba(56, 189, 248, 0.3);
+  border-bottom: 3px solid var(--accent-primary) !important;
+  box-shadow: 0 4px 14px rgba(56, 189, 248, 0.4);
+}
+
+.draggable-row.drop-target-below > td {
+  border-bottom: 3px solid var(--accent-primary) !important;
+}
+
+/* Quick Move Arrow Buttons */
+.reorder-arrow-buttons {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.btn-reorder-move {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 0 2px;
+  font-size: 8px;
+  line-height: 1;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all var(--dur-fast) ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-reorder-move:hover:not(:disabled) {
+  color: var(--accent-primary);
+  background: var(--bg-surface-alt);
+}
+
+.btn-reorder-move:disabled {
+  opacity: 0.2;
+  cursor: default;
 }
 
 /* --------------------------------------------------------------------------

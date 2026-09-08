@@ -523,15 +523,29 @@ class StateStore {
     return this.state.home;
   }
 
-  reorderHomeSections(fromIndex, toIndex) {
+  reorderHomeSections(fromIdOrIndex, toIdOrIndex) {
     const sections = [...this.getHomeSections()];
-    if (fromIndex < 0 || fromIndex >= sections.length || toIndex < 0 || toIndex >= sections.length) return;
+    const fromIndex = typeof fromIdOrIndex === "number" ? fromIdOrIndex : sections.findIndex(s => s.id === fromIdOrIndex);
+    const toIndex = typeof toIdOrIndex === "number" ? toIdOrIndex : sections.findIndex(s => s.id === toIdOrIndex);
+    if (fromIndex < 0 || fromIndex >= sections.length || toIndex < 0 || toIndex >= sections.length || fromIndex === toIndex) return sections;
     const [moved] = sections.splice(fromIndex, 1);
     sections.splice(toIndex, 0, moved);
     if (!this.state.home) this.state.home = {};
     this.state.home.sections = sections;
     this.saveState();
     return this.state.home.sections;
+  }
+
+  moveHomeSection(id, direction) {
+    const sections = [...this.getHomeSections()];
+    const index = sections.findIndex(s => s.id === id);
+    if (index === -1) return sections;
+    let targetIndex = index;
+    if (direction === "up") targetIndex = Math.max(0, index - 1);
+    else if (direction === "down") targetIndex = Math.min(sections.length - 1, index + 1);
+    else if (direction === "top") targetIndex = 0;
+    else if (direction === "bottom") targetIndex = sections.length - 1;
+    return this.reorderHomeSections(index, targetIndex);
   }
 
   updateHomeSections(sections) {
@@ -602,15 +616,29 @@ class StateStore {
     return this.updateProject(id, { publishStatus });
   }
 
-  reorderProjects(fromIndex, toIndex) {
-    if (!Array.isArray(this.state.projects)) return;
+  reorderProjects(fromIdOrIndex, toIdOrIndex) {
+    if (!Array.isArray(this.state.projects)) return [];
     const items = [...this.state.projects];
-    if (fromIndex < 0 || fromIndex >= items.length || toIndex < 0 || toIndex >= items.length) return;
+    const fromIndex = typeof fromIdOrIndex === "number" ? fromIdOrIndex : items.findIndex(p => p.id === fromIdOrIndex);
+    const toIndex = typeof toIdOrIndex === "number" ? toIdOrIndex : items.findIndex(p => p.id === toIdOrIndex);
+    if (fromIndex < 0 || fromIndex >= items.length || toIndex < 0 || toIndex >= items.length || fromIndex === toIndex) return this.state.projects;
     const [moved] = items.splice(fromIndex, 1);
     items.splice(toIndex, 0, moved);
     this.state.projects = items;
     this.saveState();
     return this.state.projects;
+  }
+
+  moveProject(id, direction) {
+    if (!Array.isArray(this.state.projects)) return [];
+    const index = this.state.projects.findIndex(p => p.id === id);
+    if (index === -1) return this.state.projects;
+    let targetIndex = index;
+    if (direction === "up") targetIndex = Math.max(0, index - 1);
+    else if (direction === "down") targetIndex = Math.min(this.state.projects.length - 1, index + 1);
+    else if (direction === "top") targetIndex = 0;
+    else if (direction === "bottom") targetIndex = this.state.projects.length - 1;
+    return this.reorderProjects(index, targetIndex);
   }
 
   deleteProject(id) {
@@ -633,9 +661,11 @@ class StateStore {
     return false;
   }
 
-  reorderFeaturedProjects(fromIndex, toIndex) {
-    const featured = this.getFeaturedProjects();
-    if (fromIndex < 0 || fromIndex >= featured.length || toIndex < 0 || toIndex >= featured.length) return;
+  reorderFeaturedProjects(fromIdOrIndex, toIdOrIndex) {
+    const featured = [...this.getFeaturedProjects()];
+    const fromIndex = typeof fromIdOrIndex === "number" ? fromIdOrIndex : featured.findIndex(p => p.id === fromIdOrIndex);
+    const toIndex = typeof toIdOrIndex === "number" ? toIdOrIndex : featured.findIndex(p => p.id === toIdOrIndex);
+    if (fromIndex < 0 || fromIndex >= featured.length || toIndex < 0 || toIndex >= featured.length || fromIndex === toIndex) return featured;
     const [moved] = featured.splice(fromIndex, 1);
     featured.splice(toIndex, 0, moved);
 
@@ -643,6 +673,18 @@ class StateStore {
     this.state.projects = [...featured, ...nonFeatured];
     this.saveState();
     return this.getFeaturedProjects();
+  }
+
+  moveFeaturedProject(id, direction) {
+    const featured = this.getFeaturedProjects();
+    const index = featured.findIndex(p => p.id === id);
+    if (index === -1) return featured;
+    let targetIndex = index;
+    if (direction === "up") targetIndex = Math.max(0, index - 1);
+    else if (direction === "down") targetIndex = Math.min(featured.length - 1, index + 1);
+    else if (direction === "top") targetIndex = 0;
+    else if (direction === "bottom") targetIndex = featured.length - 1;
+    return this.reorderFeaturedProjects(index, targetIndex);
   }
 
   /* ==========================================================================
@@ -704,15 +746,29 @@ class StateStore {
     return this.updateVideo(id, { publishStatus });
   }
 
-  reorderVideos(fromIndex, toIndex) {
-    if (!Array.isArray(this.state.videos)) return;
+  reorderVideos(fromIdOrIndex, toIdOrIndex) {
+    if (!Array.isArray(this.state.videos)) return [];
     const items = [...this.state.videos];
-    if (fromIndex < 0 || fromIndex >= items.length || toIndex < 0 || toIndex >= items.length) return;
+    const fromIndex = typeof fromIdOrIndex === "number" ? fromIdOrIndex : items.findIndex(v => v.id === fromIdOrIndex);
+    const toIndex = typeof toIdOrIndex === "number" ? toIdOrIndex : items.findIndex(v => v.id === toIdOrIndex);
+    if (fromIndex < 0 || fromIndex >= items.length || toIndex < 0 || toIndex >= items.length || fromIndex === toIndex) return this.state.videos;
     const [moved] = items.splice(fromIndex, 1);
     items.splice(toIndex, 0, moved);
     this.state.videos = items;
     this.saveState();
     return this.state.videos;
+  }
+
+  moveVideo(id, direction) {
+    if (!Array.isArray(this.state.videos)) return [];
+    const index = this.state.videos.findIndex(v => v.id === id);
+    if (index === -1) return this.state.videos;
+    let targetIndex = index;
+    if (direction === "up") targetIndex = Math.max(0, index - 1);
+    else if (direction === "down") targetIndex = Math.min(this.state.videos.length - 1, index + 1);
+    else if (direction === "top") targetIndex = 0;
+    else if (direction === "bottom") targetIndex = this.state.videos.length - 1;
+    return this.reorderVideos(index, targetIndex);
   }
 
   deleteVideo(id) {
@@ -735,9 +791,11 @@ class StateStore {
     return false;
   }
 
-  reorderFeaturedVideos(fromIndex, toIndex) {
-    const featured = this.getFeaturedVideos();
-    if (fromIndex < 0 || fromIndex >= featured.length || toIndex < 0 || toIndex >= featured.length) return;
+  reorderFeaturedVideos(fromIdOrIndex, toIdOrIndex) {
+    const featured = [...this.getFeaturedVideos()];
+    const fromIndex = typeof fromIdOrIndex === "number" ? fromIdOrIndex : featured.findIndex(v => v.id === fromIdOrIndex);
+    const toIndex = typeof toIdOrIndex === "number" ? toIdOrIndex : featured.findIndex(v => v.id === toIdOrIndex);
+    if (fromIndex < 0 || fromIndex >= featured.length || toIndex < 0 || toIndex >= featured.length || fromIndex === toIndex) return featured;
     const [moved] = featured.splice(fromIndex, 1);
     featured.splice(toIndex, 0, moved);
 
@@ -745,6 +803,18 @@ class StateStore {
     this.state.videos = [...featured, ...nonFeatured];
     this.saveState();
     return this.getFeaturedVideos();
+  }
+
+  moveFeaturedVideo(id, direction) {
+    const featured = this.getFeaturedVideos();
+    const index = featured.findIndex(v => v.id === id);
+    if (index === -1) return featured;
+    let targetIndex = index;
+    if (direction === "up") targetIndex = Math.max(0, index - 1);
+    else if (direction === "down") targetIndex = Math.min(featured.length - 1, index + 1);
+    else if (direction === "top") targetIndex = 0;
+    else if (direction === "bottom") targetIndex = featured.length - 1;
+    return this.reorderFeaturedVideos(index, targetIndex);
   }
 
   /* ==========================================================================
@@ -792,15 +862,29 @@ class StateStore {
     return this.updatePortfolioItem(id, { publishStatus });
   }
 
-  reorderPortfolio(fromIndex, toIndex) {
-    if (!Array.isArray(this.state.portfolio)) return;
+  reorderPortfolio(fromIdOrIndex, toIdOrIndex) {
+    if (!Array.isArray(this.state.portfolio)) return [];
     const items = [...this.state.portfolio];
-    if (fromIndex < 0 || fromIndex >= items.length || toIndex < 0 || toIndex >= items.length) return;
+    const fromIndex = typeof fromIdOrIndex === "number" ? fromIdOrIndex : items.findIndex(p => p.id === fromIdOrIndex);
+    const toIndex = typeof toIdOrIndex === "number" ? toIdOrIndex : items.findIndex(p => p.id === toIdOrIndex);
+    if (fromIndex < 0 || fromIndex >= items.length || toIndex < 0 || toIndex >= items.length || fromIndex === toIndex) return this.state.portfolio;
     const [moved] = items.splice(fromIndex, 1);
     items.splice(toIndex, 0, moved);
     this.state.portfolio = items;
     this.saveState();
     return this.state.portfolio;
+  }
+
+  movePortfolio(id, direction) {
+    if (!Array.isArray(this.state.portfolio)) return [];
+    const index = this.state.portfolio.findIndex(p => p.id === id);
+    if (index === -1) return this.state.portfolio;
+    let targetIndex = index;
+    if (direction === "up") targetIndex = Math.max(0, index - 1);
+    else if (direction === "down") targetIndex = Math.min(this.state.portfolio.length - 1, index + 1);
+    else if (direction === "top") targetIndex = 0;
+    else if (direction === "bottom") targetIndex = this.state.portfolio.length - 1;
+    return this.reorderPortfolio(index, targetIndex);
   }
 
   deletePortfolioItem(id) {
@@ -822,6 +906,7 @@ class StateStore {
     }
     return false;
   }
+
 
   /* ==========================================================================
      MUTATIONS: APPEARANCE & THEME CONTROL SYSTEM
