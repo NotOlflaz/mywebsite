@@ -1,0 +1,136 @@
+/* ==========================================================================
+   SCROLL REVEAL ENGINE — VERY OBVIOUS & DIRECTIONAL FADE + SLIDE SYSTEM
+   
+   DOWN:
+     Entrance (enters from bottom): opacity 0 -> 1, translate3d(0, 80px, 0) -> translate3d(0, 0, 0)
+     Exit (leaves through top):     opacity 1 -> 0, translate3d(0, 0, 0) -> translate3d(0, -80px, 0)
+   UP:
+     Entrance (enters from top):    opacity 0 -> 1, translate3d(0, -80px, 0) -> translate3d(0, 0, 0)
+     Exit (leaves through bottom):  opacity 1 -> 0, translate3d(0, 0, 0) -> translate3d(0, 80px, 0)
+     
+   Timing:
+     800ms cubic-bezier(0.16, 1, 0.3, 1) for both opacity AND transform
+     
+   Strict Separation:
+     - Zero scale on scroll. No pop on scroll.
+     - Hover pop strictly separated: translate3d(0, -6px, 0) scale(1.02)
+   ========================================================================== */
+
+/* Target Elements Initial Baseline */
+.scroll-reveal,
+.reveal-init,
+.reveal-card,
+.section-header.reveal-init,
+.cta-banner.reveal-init,
+.featured-video-spotlight,
+.project-detail-header,
+.project-detail-hero-media,
+.project-specs-card,
+.filter-toolbar,
+.about-block.reveal-init,
+.about-sidebar-card.reveal-init,
+.hero-content.reveal-init,
+.hero-avatar-box.reveal-init,
+.channel-desc-box.reveal-init,
+[data-reveal] {
+  opacity: 0;
+  transform: translate3d(0, 80px, 0);
+  transition: opacity 800ms cubic-bezier(0.16, 1, 0.3, 1),
+              transform 800ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+  will-change: opacity, transform;
+}
+
+/* 1. Element is BELOW the viewport (Initial state or exit through bottom) */
+.reveal-state-below {
+  opacity: 0 !important;
+  transform: translate3d(0, 80px, 0) !important;
+  transition: opacity 800ms cubic-bezier(0.16, 1, 0.3, 1),
+              transform 800ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* 2. Element is INSIDE the viewport (Fully visible at resting position) */
+.reveal-state-visible {
+  opacity: 1 !important;
+  transform: translate3d(0, 0, 0) !important;
+  transition: opacity 800ms cubic-bezier(0.16, 1, 0.3, 1),
+              transform 800ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* 3. Element is ABOVE the viewport (Exit through top or start for scrolling up) */
+.reveal-state-above {
+  opacity: 0 !important;
+  transform: translate3d(0, -80px, 0) !important;
+  transition: opacity 800ms cubic-bezier(0.16, 1, 0.3, 1),
+              transform 800ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* Progressive Stagger Delays when entering Visible State (70ms step) */
+.reveal-state-visible.stagger-1 { transition-delay: 0ms; }
+.reveal-state-visible.stagger-2 { transition-delay: 70ms; }
+.reveal-state-visible.stagger-3 { transition-delay: 140ms; }
+.reveal-state-visible.stagger-4 { transition-delay: 210ms; }
+.reveal-state-visible.stagger-5 { transition-delay: 280ms; }
+.reveal-state-visible.stagger-6 { transition-delay: 350ms; }
+.reveal-state-visible.stagger-7 { transition-delay: 420ms; }
+.reveal-state-visible.stagger-8 { transition-delay: 490ms; }
+
+/* Grid Children Dynamic Cascade */
+.scroll-reveal-grid > .reveal-card.reveal-state-visible:nth-child(1) { transition-delay: 0ms; }
+.scroll-reveal-grid > .reveal-card.reveal-state-visible:nth-child(2) { transition-delay: 70ms; }
+.scroll-reveal-grid > .reveal-card.reveal-state-visible:nth-child(3) { transition-delay: 140ms; }
+.scroll-reveal-grid > .reveal-card.reveal-state-visible:nth-child(4) { transition-delay: 210ms; }
+.scroll-reveal-grid > .reveal-card.reveal-state-visible:nth-child(5) { transition-delay: 280ms; }
+.scroll-reveal-grid > .reveal-card.reveal-state-visible:nth-child(6) { transition-delay: 350ms; }
+.scroll-reveal-grid > .reveal-card.reveal-state-visible:nth-child(7) { transition-delay: 420ms; }
+.scroll-reveal-grid > .reveal-card.reveal-state-visible:nth-child(8) { transition-delay: 490ms; }
+
+/* Reset delay when leaving viewport so exit is immediate without delay */
+:not(.reveal-state-visible) {
+  transition-delay: 0ms !important;
+}
+
+/* ==========================================================================
+   HOVER POP / LIFT — STRICTLY SEPARATE (Active ONLY on mouse hover while visible)
+   ========================================================================== */
+.card-hover.reveal-state-visible:hover,
+.reveal-card.reveal-state-visible:hover,
+.channel-stat-card.reveal-state-visible:hover,
+.skill-card.reveal-state-visible:hover,
+.tool-badge-box.reveal-state-visible:hover,
+.hero-avatar-box.reveal-state-visible:hover {
+  transform: translate3d(0, -6px, 0) scale(1.02) !important;
+  border-color: var(--border-hover) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.6), 0 0 16px var(--accent-surface) !important;
+  transition: transform 250ms cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 250ms ease,
+              box-shadow 250ms ease,
+              background-color 250ms ease !important;
+}
+
+/* Reduced motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+  .scroll-reveal,
+  .reveal-card,
+  .reveal-init,
+  .reveal-state-below,
+  .reveal-state-visible,
+  .reveal-state-above,
+  .cta-banner,
+  .hero-grid,
+  .section-header,
+  .featured-video-spotlight,
+  .project-specs-card,
+  .scroll-indicator-container,
+  .scroll-indicator-bar {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
