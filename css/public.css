@@ -9,10 +9,11 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  background-color: rgba(8, 9, 12, 0.92);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border-color);
+  background-color: var(--nav-bg, rgba(8, 9, 12, 0.92));
+  opacity: var(--nav-bg-opacity, 1);
+  backdrop-filter: blur(var(--nav-blur, 12px));
+  -webkit-backdrop-filter: blur(var(--nav-blur, 12px));
+  border-bottom: 1px solid rgba(255, 255, 255, var(--nav-border-opacity, 0.08));
   transition: background-color var(--dur-normal) ease,
               border-color var(--dur-normal) ease,
               box-shadow var(--dur-normal) ease;
@@ -20,8 +21,8 @@
 
 /* Navbar Scrolled State */
 .public-header.nav-scrolled {
-  background-color: rgba(8, 9, 12, 0.98);
-  border-bottom-color: rgba(255, 255, 255, 0.12);
+  background-color: var(--nav-bg, rgba(8, 9, 12, 0.98));
+  border-bottom-color: rgba(255, 255, 255, calc(var(--nav-border-opacity, 0.08) * 1.5));
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
 }
 
@@ -29,12 +30,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: var(--header-height);
+  height: var(--nav-height, var(--header-height, 64px));
   transition: height var(--dur-normal) var(--ease-smooth);
 }
 
 .public-header.nav-scrolled .nav-container {
-  height: 56px;
+  height: calc(var(--nav-height, var(--header-height, 64px)) - 8px);
 }
 
 /* Brand Identity */
@@ -42,7 +43,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-xs);
-  font-size: var(--text-lg);
+  font-size: var(--nav-logo-size, var(--text-lg));
   font-weight: 800;
   letter-spacing: -0.025em;
   color: #ffffff;
@@ -878,10 +879,10 @@
    -------------------------------------------------------------------------- */
 .public-footer {
   margin-top: auto;
-  background-color: var(--bg-page-alt);
-  border-top: 1px solid var(--border-color);
-  padding-top: var(--space-3xl);
-  padding-bottom: var(--space-2xl);
+  background-color: var(--footer-bg, var(--bg-page-alt));
+  border-top: 1px solid var(--footer-border, var(--border-color));
+  padding-top: var(--footer-spacing-y, var(--space-3xl));
+  padding-bottom: var(--footer-spacing-y, var(--space-2xl));
 }
 
 .footer-grid {
@@ -909,7 +910,7 @@
   text-transform: uppercase;
   letter-spacing: 0.08em;
   margin-bottom: var(--space-md);
-  color: #ffffff;
+  color: var(--footer-heading-color, #ffffff);
 }
 
 .footer-nav-list {
@@ -921,13 +922,13 @@
 
 .footer-nav-link {
   font-size: var(--text-sm);
-  color: var(--text-muted);
+  color: var(--footer-link-color, var(--text-muted));
   transition: color var(--dur-fast) ease, transform var(--dur-fast) ease;
   display: inline-block;
 }
 
 .footer-nav-link:hover {
-  color: #ffffff;
+  color: var(--footer-accent-color, #ffffff);
   transform: translateX(2px);
 }
 
@@ -940,5 +941,5 @@
   gap: var(--space-md);
   flex-wrap: wrap;
   font-size: var(--text-xs);
-  color: var(--text-light);
+  color: var(--footer-muted-color, var(--text-light));
 }

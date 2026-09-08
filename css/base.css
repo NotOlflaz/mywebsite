@@ -223,16 +223,33 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: -0.02em;
 }
 
-h1 { font-size: var(--text-4xl); font-weight: 800; letter-spacing: -0.03em; }
-h2 { font-size: var(--text-2xl); font-weight: 700; }
-h3 { font-size: var(--text-xl); font-weight: 700; }
+h1 { 
+  font-size: var(--hero-font-size, var(--text-4xl)); 
+  font-weight: var(--hero-font-weight, 800); 
+  letter-spacing: var(--hero-letter-spacing, -0.03em); 
+  line-height: var(--hero-line-height, 1.25);
+  color: var(--heading-main-color, var(--text-main));
+}
+h2 { 
+  font-size: var(--section-font-size, var(--text-2xl)); 
+  font-weight: var(--section-font-weight, 700); 
+  letter-spacing: var(--section-letter-spacing, -0.02em);
+  color: var(--heading-secondary-color, var(--text-main));
+}
+h3 { 
+  font-size: var(--card-title-size, var(--text-xl)); 
+  font-weight: var(--card-title-weight, 700); 
+}
 h4 { font-size: var(--text-lg); font-weight: 600; }
 h5 { font-size: var(--text-base); font-weight: 600; }
 h6 { font-size: var(--text-sm); font-weight: 600; }
 
 p {
   color: var(--text-muted);
-  line-height: 1.65;
+  font-size: var(--body-font-size, var(--text-base));
+  font-weight: var(--body-font-weight, 400);
+  line-height: var(--body-line-height, 1.65);
+  letter-spacing: var(--body-letter-spacing, normal);
 }
 
 a {
@@ -260,16 +277,16 @@ button, input, select, textarea {
 /* Common Layout Utilities */
 .container {
   width: 100%;
-  max-width: var(--container-max-width);
+  max-width: var(--container-max-width, 1200px);
   margin-left: auto;
   margin-right: auto;
-  padding-left: var(--space-lg);
-  padding-right: var(--space-lg);
+  padding-left: var(--container-padding-x, var(--space-lg));
+  padding-right: var(--container-padding-x, var(--space-lg));
 }
 
 .container-admin {
   width: 100%;
-  max-width: var(--container-admin-width);
+  max-width: var(--container-admin-width, 1360px);
   margin-left: auto;
   margin-right: auto;
   padding-left: var(--space-xl);
@@ -277,8 +294,9 @@ button, input, select, textarea {
 }
 
 .section {
-  padding-top: var(--space-3xl);
-  padding-bottom: var(--space-3xl);
+  padding-top: var(--section-padding-y, var(--space-3xl));
+  padding-bottom: var(--section-padding-y, var(--space-3xl));
+  margin-top: var(--section-spacing-y, 0px);
   position: relative;
 }
 
@@ -385,14 +403,14 @@ button, input, select, textarea {
    -------------------------------------------------------------------------- */
 .scroll-indicator-container {
   position: fixed;
-  right: 10px;
+  right: var(--progress-right, 10px);
   top: 50%;
   transform: translateY(-50%);
-  width: 3px;
-  height: 180px;
+  width: var(--progress-width, 3px);
+  height: var(--progress-height, 180px);
   max-height: 45vh;
   background-color: rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius-full);
+  border-radius: var(--progress-radius, var(--radius-full));
   z-index: 95;
   overflow: hidden;
   cursor: pointer;
@@ -401,25 +419,29 @@ button, input, select, textarea {
 }
 
 .scroll-indicator-container:hover {
-  width: 5px;
+  width: calc(var(--progress-width, 3px) + 2px);
   background-color: rgba(255, 255, 255, 0.16);
 }
 
 .scroll-indicator-bar {
   width: 100%;
   height: 0%;
-  background-color: var(--accent-primary);
-  box-shadow: 0 0 10px var(--accent-border);
-  border-radius: var(--radius-full);
+  background-color: var(--progress-color, var(--accent-primary));
+  box-shadow: 0 0 10px var(--progress-glow, var(--accent-border));
+  border-radius: var(--progress-radius, var(--radius-full));
+  opacity: var(--progress-opacity, 1);
   transition: height 60ms linear;
   will-change: height;
 }
 
 @media (max-width: 768px) {
   .scroll-indicator-container {
-    right: 3px;
+    right: 4px;
     width: 2px;
     height: 120px;
+  }
+  .scroll-indicator-container.hide-on-mobile {
+    display: none !important;
   }
 }
 

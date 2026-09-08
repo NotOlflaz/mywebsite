@@ -70,10 +70,6 @@ export function renderNavbar(activeRoute = "") {
             ${getIcon("discord", 14)}
             <span>Discord</span>
           </a>
-          <a href="#/admin" class="nav-admin-link" title="Open CMS Admin Dashboard">
-            ${getIcon("settings", 13)}
-            <span>CMS Admin</span>
-          </a>
           
           <!-- Mobile Hamburger Toggle -->
           <button class="hamburger-btn" id="mobile-menu-toggle-btn" aria-label="Toggle Navigation Menu">
@@ -102,10 +98,6 @@ export function renderNavbar(activeRoute = "") {
           <a href="${social.discord || '#'}" target="_blank" rel="noopener noreferrer" class="btn btn-discord btn-block">
             ${getIcon("discord", 16)}
             <span>Join Discord Community</span>
-          </a>
-          <a href="#/admin" class="btn btn-outline btn-block" style="margin-top: 8px;">
-            ${getIcon("settings", 15)}
-            <span>Admin CMS Dashboard</span>
           </a>
         </div>
       </div>

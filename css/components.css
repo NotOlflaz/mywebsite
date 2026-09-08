@@ -10,18 +10,18 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-xs);
-  padding: 0.6rem 1.25rem;
+  padding: var(--btn-padding-y, 0.6rem) var(--btn-padding-x, 1.25rem);
   font-size: var(--text-sm);
   font-weight: 600;
-  border-radius: var(--radius-sm);
-  border: 1px solid transparent;
+  border-radius: var(--btn-radius, var(--radius-sm));
+  border: var(--btn-border-width, 1px) solid transparent;
   cursor: pointer;
   text-decoration: none;
-  transition: transform var(--dur-fast) var(--ease-spring),
-              background-color var(--dur-fast) ease,
-              border-color var(--dur-fast) ease,
-              box-shadow var(--dur-fast) ease,
-              color var(--dur-fast) ease;
+  transition: transform var(--btn-transition-speed, var(--dur-fast)) var(--ease-spring),
+              background-color var(--btn-transition-speed, var(--dur-fast)) ease,
+              border-color var(--btn-transition-speed, var(--dur-fast)) ease,
+              box-shadow var(--btn-transition-speed, var(--dur-fast)) ease,
+              color var(--btn-transition-speed, var(--dur-fast)) ease;
   white-space: nowrap;
   font-family: inherit;
   line-height: 1.25;
@@ -35,24 +35,29 @@
 
 /* Tactile Press-down on click */
 .btn:active {
-  transform: translateY(1px) scale(0.985);
+  transform: translateY(1px) scale(var(--btn-active-scale, 0.985));
   transition-duration: 50ms;
 }
 
-/* Primary Button: Solid Off-White Contrast with Soft Ambient Glow */
+/* Primary Button: Solid Contrast with Ambient / Configurable Glow */
 .btn-primary {
-  background-color: var(--text-main);
-  color: var(--bg-page);
+  background-color: var(--btn-bg, var(--text-main));
+  color: var(--btn-text, var(--bg-page));
   font-weight: 700;
-  border-color: var(--text-main);
+  border-color: var(--btn-bg, var(--text-main));
 }
 
 .btn-primary:hover {
-  background-color: #ffffff;
-  border-color: #ffffff;
-  color: #000000;
-  transform: translateY(-2px) scale(1.01);
-  box-shadow: 0 4px 18px rgba(255, 255, 255, 0.12);
+  background-color: var(--btn-hover-bg, #ffffff);
+  border-color: var(--btn-hover-bg, #ffffff);
+  color: var(--btn-text, #000000);
+  transform: translateY(calc(-1 * var(--btn-hover-lift, 2px))) scale(var(--btn-hover-scale, 1.01));
+  box-shadow: var(--glow-button, 0 4px 18px rgba(255, 255, 255, 0.12));
+}
+
+.btn-primary:active {
+  background-color: var(--btn-active-bg, #e2e8f0);
+  border-color: var(--btn-active-bg, #e2e8f0);
 }
 
 /* Accent Button Variant: Signature Cyan / Accent with Soft Dark Glow */
@@ -64,10 +69,15 @@
 }
 
 .btn-accent:hover {
-  background-color: var(--accent-secondary);
-  border-color: var(--accent-secondary);
-  transform: translateY(-2px) scale(1.01);
-  box-shadow: var(--glow-accent-btn);
+  background-color: var(--accent-hover, var(--accent-secondary));
+  border-color: var(--accent-hover, var(--accent-secondary));
+  transform: translateY(calc(-1 * var(--btn-hover-lift, 2px))) scale(var(--btn-hover-scale, 1.01));
+  box-shadow: var(--glow-button, var(--glow-accent-btn));
+}
+
+.btn-accent:active {
+  background-color: var(--accent-active, #0284c7);
+  border-color: var(--accent-active, #0284c7);
 }
 
 /* Secondary Button: Dark Solid Surface with Subtle Border & Lift */
@@ -81,7 +91,7 @@
   background-color: var(--bg-surface-hover);
   border-color: var(--border-hover);
   color: #ffffff;
-  transform: translateY(-1px);
+  transform: translateY(calc(-1 * var(--btn-hover-lift, 1px)));
 }
 
 /* Outline Button */
@@ -95,7 +105,7 @@
   background-color: rgba(255, 255, 255, 0.04);
   border-color: var(--border-hover);
   color: #ffffff;
-  transform: translateY(-1px);
+  transform: translateY(calc(-1 * var(--btn-hover-lift, 1px)));
 }
 
 /* Danger Button */
@@ -109,7 +119,7 @@
   background-color: rgba(239, 68, 68, 0.18);
   border-color: rgba(239, 68, 68, 0.35);
   color: #fca5a5;
-  transform: translateY(-1px);
+  transform: translateY(calc(-1 * var(--btn-hover-lift, 1px)));
 }
 
 /* Social Channel Buttons */
@@ -216,24 +226,51 @@
    Cards (Dark, Quiet Surfaces with Visual Hierarchy)
    -------------------------------------------------------------------------- */
 .card {
-  background-color: var(--bg-surface);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  background-color: var(--card-bg, var(--bg-surface));
+  opacity: var(--card-opacity, 1);
+  border: var(--card-border-width, 1px) solid var(--card-border, var(--border-color));
+  border-radius: var(--card-radius, var(--radius-md));
+  box-shadow: var(--card-shadow, var(--shadow-sm));
   overflow: hidden;
   display: flex;
   flex-direction: column;
   position: relative;
   transition: border-color var(--dur-normal) ease,
               box-shadow var(--dur-normal) ease,
-              background-color var(--dur-normal) ease;
-  will-change: border-color, box-shadow;
+              background-color var(--dur-normal) ease,
+              transform var(--dur-normal) var(--ease-spring);
+  will-change: border-color, box-shadow, transform;
 }
 
 .card-hover:hover {
-  transform: translateY(-3px);
+  transform: translateY(calc(-1 * var(--card-hover-lift, 3px))) scale(var(--card-hover-scale, 1));
   border-color: var(--border-hover);
   background-color: var(--bg-surface-alt);
-  box-shadow: var(--glow-card);
+  box-shadow: var(--card-hover-glow, var(--glow-card));
+}
+
+/* Specific Card Type Overrides */
+.projects-page-root .card,
+[data-card-type="project"] {
+  background-color: var(--card-project-bg, var(--card-bg, var(--bg-surface)));
+}
+
+.videos-page-root .card,
+[data-card-type="video"] {
+  background-color: var(--card-video-bg, var(--card-bg, var(--bg-surface)));
+}
+
+.portfolio-page-root .card,
+[data-card-type="portfolio"] {
+  background-color: var(--card-portfolio-bg, var(--card-bg, var(--bg-surface)));
+}
+
+.card-featured,
+[data-featured="true"],
+#featured-project-spotlight,
+.featured-video-spotlight {
+  background-color: var(--card-featured-bg, var(--card-bg, var(--bg-surface)));
+  box-shadow: var(--card-featured-glow, var(--glow-card));
 }
 
 .card-media {
@@ -257,7 +294,7 @@
 }
 
 .card-hover:hover .card-media img {
-  transform: scale(1.025);
+  transform: scale(var(--card-image-zoom, 1.025));
 }
 
 .card-media-placeholder {

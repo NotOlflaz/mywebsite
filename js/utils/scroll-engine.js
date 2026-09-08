@@ -16,6 +16,8 @@
  * - Continuous replay in both directions indefinitely.
  */
 
+import { store } from "../store/state.js";
+
 let scrollObserver = null;
 let scrollIndicatorContainer = null;
 let scrollIndicatorBar = null;
@@ -34,14 +36,15 @@ const SMOOTH_EASE = 0.16;
  */
 export function initScrollEngine() {
   const isPublic = !window.location.hash.startsWith("#/admin");
+  const app = store.getAppearance() || {};
 
   // Sync scroll positions
   currentY = window.scrollY || 0;
   targetY = window.scrollY || 0;
 
   // 1. Setup Custom Scroll Progress Indicator for Public Website
-  if (isPublic) {
-    ensureScrollIndicator();
+  if (isPublic && app.scrollProgressEnabled !== false) {
+    ensureScrollIndicator(app);
   } else {
     removeScrollIndicator();
   }
@@ -263,7 +266,7 @@ function isInsideScrollableContainer(el) {
 /**
  * Ensure the Custom Vertical Scroll Indicator is in the DOM
  */
-function ensureScrollIndicator() {
+function ensureScrollIndicator(app = {}) {
   scrollIndicatorContainer = document.getElementById("scroll-indicator-container");
   if (!scrollIndicatorContainer) {
     scrollIndicatorContainer = document.createElement("div");
@@ -290,6 +293,12 @@ function ensureScrollIndicator() {
     document.body.appendChild(scrollIndicatorContainer);
   } else {
     scrollIndicatorBar = document.getElementById("scroll-indicator-bar");
+  }
+
+  if (app.scrollProgressMobile === false) {
+    scrollIndicatorContainer.classList.add("hide-on-mobile");
+  } else {
+    scrollIndicatorContainer.classList.remove("hide-on-mobile");
   }
 }
 

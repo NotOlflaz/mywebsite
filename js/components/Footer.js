@@ -65,15 +65,15 @@ export function renderFooter() {
             </ul>
           </div>
 
-          <!-- Col 4: Platform & Management -->
+          <!-- Col 4: Focus & Craft -->
           <div>
-            <h4 class="footer-col-title">CMS Management</h4>
+            <h4 class="footer-col-title">Focus & Craft</h4>
             <ul class="footer-nav-list">
-              <li><a href="#/admin" class="footer-nav-link" style="color: var(--accent-primary); font-weight: 700;">Admin Dashboard</a></li>
-              <li><a href="#/admin/appearance" class="footer-nav-link">Theme & Appearance</a></li>
-              <li><a href="#/admin/projects" class="footer-nav-link">Manage Projects</a></li>
-              <li><a href="#/admin/videos" class="footer-nav-link">Manage Videos</a></li>
-              <li><a href="#/admin/settings" class="footer-nav-link">Site Settings & Backup</a></li>
+              <li><span class="footer-nav-link" style="color: var(--text-light);">Godot 4 Engine</span></li>
+              <li><span class="footer-nav-link" style="color: var(--text-light);">Minecraft Systems</span></li>
+              <li><span class="footer-nav-link" style="color: var(--text-light);">GDScript & Tools</span></li>
+              <li><span class="footer-nav-link" style="color: var(--text-light);">Devlogs & Tutorials</span></li>
+              <li><a href="#/about" class="footer-nav-link" style="color: var(--accent-primary);">Get in Touch &rarr;</a></li>
             </ul>
           </div>
         </div>
