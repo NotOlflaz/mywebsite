@@ -35,6 +35,7 @@ export function renderAdminLayout(contentHtml, activeAdminRoute = "#/admin", bre
       group: "WEBSITE",
       items: [
         { label: "Home Page", href: "#/admin/home", iconName: "home" },
+        { label: "Minecraft Channel", href: "#/admin/minecraft", iconName: "cube" },
         { label: "About Page", href: "#/admin/about", iconName: "about" },
         { label: "Featured Content", href: "#/admin/featured", iconName: "star", count: metrics.featuredProjects + metrics.featuredVideos }
       ]

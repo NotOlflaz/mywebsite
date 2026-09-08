@@ -461,6 +461,154 @@
 }
 
 /* --------------------------------------------------------------------------
+   Minecraft Channel Showcase Card
+   -------------------------------------------------------------------------- */
+.minecraft-channel-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  position: relative;
+  transition: border-color var(--dur-normal) ease,
+              transform var(--dur-fast) var(--ease-spring),
+              box-shadow var(--dur-normal) ease;
+  will-change: transform, border-color, box-shadow;
+}
+
+.minecraft-channel-card:hover {
+  border-color: var(--border-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+}
+
+.minecraft-banner-frame {
+  width: 100%;
+  height: 180px;
+  position: relative;
+  overflow: hidden;
+  background-color: var(--bg-surface-alt);
+}
+
+.minecraft-banner-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.minecraft-banner-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(8, 9, 12, 0.1) 0%, rgba(14, 17, 23, 0.95) 100%);
+}
+
+.minecraft-channel-content {
+  padding: var(--space-xl);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xl);
+  position: relative;
+  z-index: 1;
+}
+
+.minecraft-channel-card.has-banner .minecraft-channel-content {
+  margin-top: -48px;
+  padding-top: 0;
+}
+
+.minecraft-channel-main {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  flex: 1;
+}
+
+.minecraft-avatar-wrap {
+  width: 88px;
+  height: 88px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background-color: var(--bg-surface-alt);
+  border: 2px solid var(--border-color);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.minecraft-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.minecraft-avatar-placeholder {
+  color: var(--accent-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.minecraft-info {
+  flex: 1;
+}
+
+.minecraft-title {
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  color: #ffffff;
+  margin-top: 4px;
+  margin-bottom: 6px;
+  letter-spacing: -0.02em;
+}
+
+.minecraft-desc {
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--text-muted);
+  max-width: 680px;
+}
+
+.minecraft-channel-actions {
+  flex-shrink: 0;
+}
+
+@media (max-width: 860px) {
+  .minecraft-channel-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .minecraft-channel-actions {
+    width: 100%;
+    margin-top: var(--space-xs);
+  }
+  .minecraft-channel-actions .btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 580px) {
+  .minecraft-channel-main {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-md);
+  }
+  .minecraft-avatar-wrap {
+    width: 72px;
+    height: 72px;
+  }
+  .minecraft-channel-card.has-banner .minecraft-channel-content {
+    margin-top: -36px;
+  }
+  .minecraft-banner-frame {
+    height: 130px;
+  }
+}
+
+/* --------------------------------------------------------------------------
    Skills & Specialization Cards
    -------------------------------------------------------------------------- */
 .skills-grid {

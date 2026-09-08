@@ -145,6 +145,73 @@ function renderChannelSection(stats, social, cfg) {
   `;
 }
 
+function renderMinecraftSection(minecraft, cfg) {
+  // Empty / Disabled check: completely hide if disabled or no channel name & url
+  if (!minecraft || minecraft.enabled === false) return "";
+  if (!minecraft.channelName && !minecraft.channelUrl) return "";
+
+  const sectionTitle = cfg.title || "Minecraft Channel";
+  const hasBanner = Boolean(minecraft.bannerImage && minecraft.bannerImage.trim());
+
+  return `
+    <section class="section" aria-labelledby="minecraft-channel-title" id="home-section-minecraft">
+      <div class="container">
+        <div class="section-header reveal-init" style="margin-bottom: var(--space-xl);">
+          <div class="badge" style="margin-bottom: var(--space-2xs);">MINECRAFT CONTENT</div>
+          <h2 id="minecraft-channel-title">${sectionTitle}</h2>
+          <p>Dedicated Minecraft gameplay, survival SMPs, PvP challenges, and community adventures.</p>
+        </div>
+
+        <div class="minecraft-channel-card reveal-card ${hasBanner ? 'has-banner' : ''}">
+          ${hasBanner ? `
+            <div class="minecraft-banner-frame">
+              <img src="${escapeHtml(minecraft.bannerImage)}" alt="${escapeHtml(minecraft.channelName)} Banner" loading="lazy" />
+              <div class="minecraft-banner-overlay"></div>
+            </div>
+          ` : ''}
+
+          <div class="minecraft-channel-content">
+            <div class="minecraft-channel-main">
+              <div class="minecraft-avatar-wrap">
+                ${minecraft.profileImage ? `
+                  <img src="${escapeHtml(minecraft.profileImage)}" alt="${escapeHtml(minecraft.channelName)} Avatar" class="minecraft-avatar-img" loading="lazy" />
+                ` : `
+                  <div class="minecraft-avatar-placeholder">
+                    ${getIcon("cube", 36)}
+                  </div>
+                `}
+              </div>
+
+              <div class="minecraft-info">
+                <div class="flex items-center gap-xs flex-wrap">
+                  <span class="badge badge-featured">YOUTUBE GAMING</span>
+                  ${minecraft.subscribers ? `<span class="badge font-mono text-xs">${escapeHtml(minecraft.subscribers)}</span>` : ''}
+                </div>
+                <h3 class="minecraft-title">${escapeHtml(minecraft.channelName || 'Olflaz Gaming')}</h3>
+                <p class="minecraft-desc">
+                  ${escapeHtml(minecraft.description || 'Minecraft content featuring SMPs, PvP, challenges, and plenty of fun along the way.')}
+                </p>
+              </div>
+            </div>
+
+            <div class="minecraft-channel-actions">
+              <a 
+                href="${escapeHtml(minecraft.channelUrl || '#')}" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                class="btn btn-primary btn-lg"
+                id="minecraft-visit-channel-btn"
+                title="Visit ${escapeHtml(minecraft.channelName)} on YouTube">
+                ${getIcon("youtube", 18)} Visit Channel ↗
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  `;
+}
+
 function renderFeaturedProjectsSection(cfg) {
   const sectionTitle = cfg.title || "Featured Projects";
   const featuredProjects = store.getPublishedFeaturedProjects();
@@ -530,6 +597,7 @@ export function renderHomeView() {
   const home = store.getHome();
   const settings = store.getSiteSettings();
   const stats = store.getChannelStats();
+  const minecraft = store.getMinecraftChannel();
   const about = store.getAbout();
   const social = store.getSocialLinks();
   const sections = store.getHomeSections();
@@ -537,6 +605,7 @@ export function renderHomeView() {
   const sectionMap = {
     hero: (cfg) => renderHeroSection(home, settings, about, cfg),
     channel: (cfg) => renderChannelSection(stats, social, cfg),
+    minecraft: (cfg) => renderMinecraftSection(minecraft, cfg),
     projects: (cfg) => renderFeaturedProjectsSection(cfg),
     videos: (cfg) => renderFeaturedVideosSection(cfg),
     about: (cfg) => renderAboutSection(about, cfg),

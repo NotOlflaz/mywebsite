@@ -113,6 +113,12 @@ export function renderAdminDashboardView() {
             <span class="text-xs text-muted">Update hero title, bio, and CTA buttons</span>
           </a>
 
+          <a href="#/admin/minecraft" class="admin-action-btn-card" id="qa-minecraft-channel">
+            <div class="admin-action-icon">${getIcon("cube", 16)}</div>
+            <strong style="font-size: var(--text-sm);">Minecraft Channel</strong>
+            <span class="text-xs text-muted">Configure channel info, avatar & banner</span>
+          </a>
+
           <a href="#/admin/about" class="admin-action-btn-card" id="qa-edit-about">
             <div class="admin-action-icon">${getIcon("about", 16)}</div>
             <strong style="font-size: var(--text-sm);">Edit About & Skills</strong>

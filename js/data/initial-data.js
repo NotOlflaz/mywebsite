@@ -300,12 +300,23 @@ export const initialData = {
     sections: [
       { id: "hero", name: "Hero Landing", title: "Hero", enabled: true },
       { id: "channel", name: "Channel Overview", title: "Channel & Creator Overview", enabled: true },
+      { id: "minecraft", name: "Minecraft Channel", title: "Minecraft Channel", enabled: true },
       { id: "projects", name: "Featured Projects", title: "Featured Projects", enabled: true },
       { id: "videos", name: "Featured Videos", title: "Featured Videos & Tutorials", enabled: true },
       { id: "about", name: "About Preview", title: "About Olflaz", enabled: true },
       { id: "skills", name: "Skills & What I Do", title: "Skills & Core Stack", enabled: true },
       { id: "cta", name: "Call To Action & Community", title: "Join The Community", enabled: true }
     ]
+  },
+
+  minecraftChannel: {
+    enabled: true,
+    channelName: "Olflaz Gaming",
+    channelUrl: "https://www.youtube.com/@olflaz",
+    profileImage: "",
+    bannerImage: "",
+    description: "Minecraft content featuring SMPs, PvP, challenges, and plenty of fun along the way.",
+    subscribers: "1.2K Subscribers"
   },
 
   channelStats: {

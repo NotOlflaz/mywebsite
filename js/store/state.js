@@ -54,6 +54,12 @@ class StateStore {
         const homeObj = { ...initialData.home, ...(parsed.home || {}) };
         if (!Array.isArray(homeObj.sections) || homeObj.sections.length === 0) {
           homeObj.sections = initialData.home.sections;
+        } else {
+          if (!homeObj.sections.some(s => s.id === "minecraft")) {
+            const channelIdx = homeObj.sections.findIndex(s => s.id === "channel");
+            const insertIdx = channelIdx !== -1 ? channelIdx + 1 : 1;
+            homeObj.sections.splice(insertIdx, 0, { id: "minecraft", name: "Minecraft Channel", title: "Minecraft Channel", enabled: true });
+          }
         }
 
         // Migrate appearance with deep merge for new comprehensive design tokens
@@ -74,6 +80,7 @@ class StateStore {
           appearance: mergedAppearance,
           siteSettings: { ...initialData.siteSettings, ...(parsed.siteSettings || {}) },
           home: homeObj,
+          minecraftChannel: { ...initialData.minecraftChannel, ...(parsed.minecraftChannel || {}) },
           channelStats: { ...initialData.channelStats, ...(parsed.channelStats || {}) },
           about: { ...initialData.about, ...(parsed.about || {}) },
           socialLinks: { ...initialData.socialLinks, ...(parsed.socialLinks || {}) },
@@ -410,6 +417,18 @@ class StateStore {
     return this.state.channelStats;
   }
 
+  getMinecraftChannel() {
+    return this.state.minecraftChannel || initialData.minecraftChannel || {
+      enabled: true,
+      channelName: "Olflaz Gaming",
+      channelUrl: "https://www.youtube.com/@olflaz",
+      profileImage: "",
+      bannerImage: "",
+      description: "Minecraft content featuring SMPs, PvP, challenges, and plenty of fun along the way.",
+      subscribers: "1.2K Subscribers"
+    };
+  }
+
   getAbout() {
     return this.state.about;
   }
@@ -553,6 +572,19 @@ class StateStore {
     this.state.home.sections = sections;
     this.saveState();
     return this.state.home.sections;
+  }
+
+  /* ==========================================================================
+     MUTATIONS: MINECRAFT CHANNEL
+     ========================================================================== */
+
+  updateMinecraftChannel(updates) {
+    this.state.minecraftChannel = {
+      ...this.getMinecraftChannel(),
+      ...updates
+    };
+    this.saveState();
+    return this.state.minecraftChannel;
   }
 
   /* ==========================================================================

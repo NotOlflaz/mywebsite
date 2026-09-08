@@ -27,6 +27,7 @@ import { renderAdminVideosView, initAdminVideosEvents } from "./views/admin/Admi
 import { renderAdminProjectsView, initAdminProjectsEvents } from "./views/admin/AdminProjectsView.js";
 import { renderAdminPortfolioView, initAdminPortfolioEvents } from "./views/admin/AdminPortfolioView.js";
 import { renderAdminHomeView, initAdminHomeEvents } from "./views/admin/AdminHomeView.js";
+import { renderAdminMinecraftView, initAdminMinecraftEvents } from "./views/admin/AdminMinecraftView.js";
 import { renderAdminAboutView, initAdminAboutEvents } from "./views/admin/AdminAboutView.js";
 import { renderAdminFeaturedView, initAdminFeaturedEvents } from "./views/admin/AdminFeaturedView.js";
 import { renderAdminChannelView, initAdminChannelEvents } from "./views/admin/AdminChannelView.js";
@@ -223,6 +224,16 @@ router.addRoute("/admin/home", () => {
   const render = () => {
     renderAdminPage("#/admin/home", "Home Page", renderAdminHomeView(), () => {
       initAdminHomeEvents(render);
+    });
+  };
+  render();
+});
+
+// WEBSITE: Minecraft Channel Settings
+router.addRoute("/admin/minecraft", () => {
+  const render = () => {
+    renderAdminPage("#/admin/minecraft", "Minecraft Channel", renderAdminMinecraftView(), () => {
+      initAdminMinecraftEvents(render);
     });
   };
   render();
