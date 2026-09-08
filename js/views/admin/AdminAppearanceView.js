@@ -1,8 +1,14 @@
 /**
  * Admin Appearance & Comprehensive Theme Visual Control System
- * Full visual control over Colors, Background, Glows, Cards, Buttons, Typography,
- * Layout, Navbar, Footer, Animations, Decorative Shapes, Scroll Progress, and Presets.
- * Features live responsive preview (Desktop / Tablet / Mobile) and JSON theme export/import.
+ * Highly Organized Studio Layout with Master Categories:
+ * 1. Themes & Presets (presets)
+ * 2. Colors & Hierarchy (colors)
+ * 3. Atmosphere & Glows (atmosphere)
+ * 4. Cards & Buttons (components)
+ * 5. Typography & Scale (typography)
+ * 6. Layout & Nav/Footer (layout)
+ * 7. Motion & Shapes (motion)
+ * Features: Collapsible Live Component Canvas, Viewport Switcher, and Sticky Action Bar.
  */
 
 import { store } from "../../store/state.js";
@@ -12,6 +18,7 @@ import { getIcon } from "../../utils/icons.js";
 // Active Tab state inside Appearance view
 let currentActiveTab = "presets";
 let currentViewport = "desktop";
+let isPreviewOpen = true;
 
 function escapeHtml(str) {
   if (!str) return "";
@@ -29,7 +36,7 @@ function renderColorRow(label, sublabel, pickerId, hexId, value, defaultVal) {
     <div class="theme-color-row" data-color-control="${pickerId}">
       <div>
         <strong style="font-size: var(--text-xs); color: var(--text-main);">${label}</strong>
-        ${sublabel ? `<div class="text-xs text-muted">${sublabel}</div>` : ''}
+        ${sublabel ? `<div class="text-xs text-muted" style="margin-top: 1px;">${sublabel}</div>` : ''}
       </div>
       <div class="theme-color-input-group">
         <input type="color" class="theme-color-picker" id="${pickerId}" value="${val.startsWith('#') && val.length === 7 ? val : '#38bdf8'}" />
@@ -47,7 +54,7 @@ function renderSliderRow(label, inputId, valId, value, min, max, step, unit = ""
   return `
     <div class="theme-slider-group">
       <div class="theme-slider-header">
-        <span style="font-weight: 600; color: var(--text-main);">${label}</span>
+        <span style="font-weight: 600; color: var(--text-main); font-size: var(--text-xs);">${label}</span>
         <span class="theme-slider-val" id="${valId}">${numericVal}${unit}</span>
       </div>
       <input type="range" class="theme-slider-input" id="${inputId}" min="${min}" max="${max}" step="${step}" value="${numericVal}" data-unit="${unit}" data-val-id="${valId}" />
@@ -69,13 +76,16 @@ export function renderAdminAppearanceView() {
   return `
     <div class="admin-appearance-page">
       
-      <!-- Top Page Header -->
+      <!-- Top Studio Header -->
       <div class="admin-page-header">
         <div class="admin-page-header-info">
-          <h1>Visual Theme & Appearance Control System</h1>
-          <p>Control every visual aspect of the Olflaz website in real time: colors, atmosphere, glows, typography, cards, buttons, navbar, animations, and background shapes.</p>
+          <h1>Visual Theme & Appearance Studio</h1>
+          <p>Organized visual control system for the Olflaz website. Real-time controls for color tokens, atmospheric glows, card physics, typography scaling, layout boundaries, and motion.</p>
         </div>
-        <div class="flex items-center gap-xs">
+        <div class="flex items-center gap-xs flex-wrap">
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-toggle-live-preview">
+            ${getIcon('eye', 13)} ${isPreviewOpen ? 'Hide Preview' : 'Show Preview'}
+          </button>
           <button type="button" class="btn btn-outline btn-sm" id="btn-export-theme" title="Export Theme JSON">
             ${getIcon('download', 13)} Export JSON
           </button>
@@ -89,158 +99,144 @@ export function renderAdminAppearanceView() {
         </div>
       </div>
 
-      <!-- LIVE RESPONSIVE PREVIEW SYSTEM -->
-      <div class="form-section" style="margin-bottom: var(--space-xl);">
-        <div class="form-section-header">
-          <div class="form-section-title">
-            <span class="flex items-center gap-xs">
-              <span style="color: var(--accent-primary);">${getIcon('sparkles', 16)}</span>
-              <span>Live Website Component Preview</span>
-            </span>
+      <!-- COLLAPSIBLE LIVE RESPONSIVE PREVIEW DOCK -->
+      <div class="theme-preview-collapsible ${isPreviewOpen ? '' : 'is-collapsed'}" id="theme-preview-dock" style="margin-bottom: var(--space-xl);">
+        <div class="form-section">
+          <div class="form-section-header">
+            <div class="form-section-title">
+              <span class="flex items-center gap-xs">
+                <span style="color: var(--accent-primary);">${getIcon('sparkles', 16)}</span>
+                <span>Live Interactive Component Canvas</span>
+              </span>
+            </div>
+            
+            <!-- Viewport Switcher -->
+            <div class="flex items-center gap-2xs">
+              <button type="button" class="theme-viewport-btn ${currentViewport === 'desktop' ? 'active' : ''}" data-viewport="desktop" title="Desktop View (100%)">
+                Desktop
+              </button>
+              <button type="button" class="theme-viewport-btn ${currentViewport === 'tablet' ? 'active' : ''}" data-viewport="tablet" title="Tablet View (768px)">
+                Tablet (768px)
+              </button>
+              <button type="button" class="theme-viewport-btn ${currentViewport === 'mobile' ? 'active' : ''}" data-viewport="mobile" title="Mobile View (380px)">
+                Mobile (380px)
+              </button>
+            </div>
           </div>
-          
-          <!-- Viewport Switcher -->
-          <div class="flex items-center gap-2xs">
-            <button type="button" class="theme-viewport-btn ${currentViewport === 'desktop' ? 'active' : ''}" data-viewport="desktop" title="Desktop View (100%)">
-              Desktop
-            </button>
-            <button type="button" class="theme-viewport-btn ${currentViewport === 'tablet' ? 'active' : ''}" data-viewport="tablet" title="Tablet View (768px)">
-              Tablet (768px)
-            </button>
-            <button type="button" class="theme-viewport-btn ${currentViewport === 'mobile' ? 'active' : ''}" data-viewport="mobile" title="Mobile View (380px)">
-              Mobile (380px)
-            </button>
-          </div>
-        </div>
 
-        <div class="theme-preview-frame-wrapper">
-          <div class="theme-preview-viewport is-${currentViewport}" id="theme-live-preview-box">
-            <div style="background: var(--bg-page); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: var(--space-md); display: flex; flex-direction: column; gap: var(--space-md); position: relative; overflow: hidden;">
-              
-              <!-- Mock Header / Navbar -->
-              <div style="background: var(--nav-bg, var(--bg-surface)); border-bottom: 1px solid rgba(255, 255, 255, var(--nav-border-opacity, 0.08)); border-radius: var(--radius-sm); padding: 8px 14px; display: flex; align-items: center; justify-content: space-between; height: var(--nav-height, 48px);">
-                <div class="flex items-center gap-xs">
-                  <strong style="font-size: var(--nav-logo-size, 16px); color: #ffffff;">Olflaz</strong>
-                  <span class="badge" style="font-size: 9px;">CREATOR</span>
-                </div>
-                <div class="flex items-center gap-xs">
-                  <span style="font-size: 11px; color: var(--nav-active-color, var(--accent-primary)); font-weight: 700; box-shadow: var(--glow-nav-active); padding: 2px 6px; border-radius: 4px;">Projects</span>
-                  <span style="font-size: 11px; color: var(--nav-text-color, var(--text-muted));">Videos</span>
-                  <span style="font-size: 11px; color: var(--nav-text-color, var(--text-muted));">About</span>
-                </div>
-              </div>
-
-              <!-- Mock Hero Area -->
-              <div style="padding: var(--space-md) 0; border-bottom: 1px solid var(--border-subtle);">
-                <span class="badge" style="font-size: 10px; margin-bottom: 4px; background: var(--badge-bg); color: var(--badge-text);">MINECRAFT & GODOT DEVELOPER</span>
-                <h1 style="font-size: var(--hero-font-size, 26px); font-weight: var(--hero-font-weight, 800); color: var(--heading-main-color, var(--text-main)); margin: 4px 0 8px 0; line-height: var(--hero-line-height, 1.25);">
-                  Crafting Games & <span style="color: var(--accent-primary);">Digital Worlds</span>
-                </h1>
-                <p style="font-size: var(--body-font-size, 13px); color: var(--text-muted); line-height: var(--body-line-height, 1.6); margin-bottom: 12px;">
-                  Indie game development in Godot 4 and creative custom mechanics for Minecraft.
-                </p>
-                <div class="flex items-center gap-xs flex-wrap">
-                  <button type="button" class="btn btn-primary btn-sm">Primary CTA</button>
-                  <button type="button" class="btn btn-secondary btn-sm">Secondary Action</button>
-                  <button type="button" class="btn btn-outline btn-sm">Outline</button>
-                </div>
-              </div>
-
-              <!-- Mock Card Grid -->
-              <div class="grid grid-cols-3 gap-sm">
-                <!-- Project Card -->
-                <div class="card card-hover" style="padding: 10px; border-radius: var(--card-radius); background: var(--card-project-bg, var(--card-bg)); border: var(--card-border-width, 1px) solid var(--card-border);">
-                  <div style="height: 60px; background: #000; border-radius: 4px; display: flex; align-items: center; justify-content: center; margin-bottom: 6px; font-size: 10px; color: var(--text-light);">
-                    [ Project Media ]
+          <div class="theme-preview-frame-wrapper">
+            <div class="theme-preview-viewport is-${currentViewport}" id="theme-live-preview-box">
+              <div style="background: var(--bg-page); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: var(--space-md); display: flex; flex-direction: column; gap: var(--space-md); position: relative; overflow: hidden;">
+                
+                <!-- Mock Header / Navbar -->
+                <div style="background: var(--nav-bg, var(--bg-surface)); border-bottom: 1px solid rgba(255, 255, 255, var(--nav-border-opacity, 0.08)); border-radius: var(--radius-sm); padding: 8px 14px; display: flex; align-items: center; justify-content: space-between; height: var(--nav-height, 48px);">
+                  <div class="flex items-center gap-xs">
+                    <strong style="font-size: var(--nav-logo-size, 16px); color: #ffffff;">Olflaz</strong>
+                    <span class="badge" style="font-size: 9px;">CREATOR</span>
                   </div>
-                  <span class="badge" style="font-size: 9px; align-self: flex-start;">Godot 4</span>
-                  <h3 style="font-size: var(--card-title-size, 13px); margin-top: 4px; color: var(--text-main);">Shadow Realm</h3>
-                  <p style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">2D action platformer.</p>
-                </div>
-
-                <!-- Video Card -->
-                <div class="card card-hover" style="padding: 10px; border-radius: var(--card-radius); background: var(--card-video-bg, var(--card-bg)); border: var(--card-border-width, 1px) solid var(--card-border);">
-                  <div style="height: 60px; background: #000; border-radius: 4px; display: flex; align-items: center; justify-content: center; margin-bottom: 6px; font-size: 10px; color: var(--text-light);">
-                    [ Video Thumbnail ]
+                  <div class="flex items-center gap-xs">
+                    <span style="font-size: 11px; color: var(--nav-active-color, var(--accent-primary)); font-weight: 700; box-shadow: var(--glow-nav-active); padding: 2px 6px; border-radius: 4px;">Projects</span>
+                    <span style="font-size: 11px; color: var(--nav-text-color, var(--text-muted));">Videos</span>
+                    <span style="font-size: 11px; color: var(--nav-text-color, var(--text-muted));">About</span>
                   </div>
-                  <span class="badge badge-featured" style="font-size: 9px; align-self: flex-start;">Tutorial</span>
-                  <h3 style="font-size: var(--card-title-size, 13px); margin-top: 4px; color: var(--text-main);">Godot 4 Mechanics</h3>
-                  <p style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Custom player controllers.</p>
                 </div>
 
-                <!-- Featured Card -->
-                <div class="card card-hover card-featured" style="padding: 10px; border-radius: var(--card-radius); background: var(--card-featured-bg, var(--card-bg)); border: var(--card-border-width, 1px) solid var(--accent-primary); box-shadow: var(--glow-card);">
-                  <div class="flex items-center justify-between" style="margin-bottom: 4px;">
-                    <span class="badge badge-featured" style="font-size: 9px;">SPOTLIGHT</span>
-                    <span style="font-size: 9px; color: var(--accent-primary); font-family: var(--font-mono);">GODOT</span>
+                <!-- Mock Hero Area -->
+                <div style="padding: var(--space-md) 0; border-bottom: 1px solid var(--border-subtle);">
+                  <span class="badge" style="font-size: 10px; margin-bottom: 4px; background: var(--badge-bg); color: var(--badge-text);">MINECRAFT & GODOT DEVELOPER</span>
+                  <h1 style="font-size: var(--hero-font-size, 26px); font-weight: var(--hero-font-weight, 800); color: var(--heading-main-color, var(--text-main)); margin: 4px 0 8px 0; line-height: var(--hero-line-height, 1.25);">
+                    Crafting Games & <span style="color: var(--accent-primary);">Digital Worlds</span>
+                  </h1>
+                  <p style="font-size: var(--body-font-size, 13px); color: var(--text-muted); line-height: var(--body-line-height, 1.6); margin-bottom: 12px;">
+                    Indie game development in Godot 4 and creative custom mechanics for Minecraft.
+                  </p>
+                  <div class="flex items-center gap-xs flex-wrap">
+                    <button type="button" class="btn btn-primary btn-sm">Primary CTA</button>
+                    <button type="button" class="btn btn-secondary btn-sm">Secondary Action</button>
+                    <button type="button" class="btn btn-outline btn-sm">Outline</button>
                   </div>
-                  <h3 style="font-size: var(--card-title-size, 13px); color: var(--text-main);">Dimension Runner</h3>
-                  <p style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Featured highlight release.</p>
                 </div>
-              </div>
 
-              <!-- Mock Footer Area -->
-              <div style="background: var(--footer-bg, #050608); border-top: 1px solid var(--footer-border, var(--border-color)); border-radius: var(--radius-sm); padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: var(--footer-text-color, var(--text-muted));">
-                <div>&copy; ${new Date().getFullYear()} Olflaz &bull; Developer & Creator</div>
-                <div style="color: var(--footer-accent-color, var(--accent-primary)); font-weight: 600;">Built with Pure Vanilla CSS</div>
-              </div>
+                <!-- Mock Card Grid -->
+                <div class="grid grid-cols-3 gap-sm">
+                  <!-- Project Card -->
+                  <div class="card card-hover" style="padding: 10px; border-radius: var(--card-radius); background: var(--card-project-bg, var(--card-bg)); border: var(--card-border-width, 1px) solid var(--card-border);">
+                    <div style="height: 60px; background: #000; border-radius: 4px; display: flex; align-items: center; justify-content: center; margin-bottom: 6px; font-size: 10px; color: var(--text-light);">
+                      [ Project Media ]
+                    </div>
+                    <span class="badge" style="font-size: 9px; align-self: flex-start;">Godot 4</span>
+                    <h3 style="font-size: var(--card-title-size, 13px); margin-top: 4px; color: var(--text-main);">Shadow Realm</h3>
+                    <p style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">2D action platformer.</p>
+                  </div>
 
+                  <!-- Video Card -->
+                  <div class="card card-hover" style="padding: 10px; border-radius: var(--card-radius); background: var(--card-video-bg, var(--card-bg)); border: var(--card-border-width, 1px) solid var(--card-border);">
+                    <div style="height: 60px; background: #000; border-radius: 4px; display: flex; align-items: center; justify-content: center; margin-bottom: 6px; font-size: 10px; color: var(--text-light);">
+                      [ Video Thumbnail ]
+                    </div>
+                    <span class="badge badge-featured" style="font-size: 9px; align-self: flex-start;">Tutorial</span>
+                    <h3 style="font-size: var(--card-title-size, 13px); margin-top: 4px; color: var(--text-main);">Godot 4 Mechanics</h3>
+                    <p style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Custom player controllers.</p>
+                  </div>
+
+                  <!-- Featured Card -->
+                  <div class="card card-hover card-featured" style="padding: 10px; border-radius: var(--card-radius); background: var(--card-featured-bg, var(--card-bg)); border: var(--card-border-width, 1px) solid var(--accent-primary); box-shadow: var(--glow-card);">
+                    <div class="flex items-center justify-between" style="margin-bottom: 4px;">
+                      <span class="badge badge-featured" style="font-size: 9px;">SPOTLIGHT</span>
+                      <span style="font-size: 9px; color: var(--accent-primary); font-family: var(--font-mono);">GODOT</span>
+                    </div>
+                    <h3 style="font-size: var(--card-title-size, 13px); color: var(--text-main);">Dimension Runner</h3>
+                    <p style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Featured highlight release.</p>
+                  </div>
+                </div>
+
+                <!-- Mock Footer Area -->
+                <div style="background: var(--footer-bg, #050608); border-top: 1px solid var(--footer-border, var(--border-color)); border-radius: var(--radius-sm); padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: var(--footer-text-color, var(--text-muted));">
+                  <div>&copy; ${new Date().getFullYear()} Olflaz &bull; Developer & Creator</div>
+                  <div style="color: var(--footer-accent-color, var(--accent-primary)); font-weight: 600;">Built with Pure Vanilla CSS</div>
+                </div>
+
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- NAVIGATION TABS FOR 13 SECTIONS -->
-      <nav class="theme-editor-nav" aria-label="Theme Editor Sections">
+      <!-- MASTER STUDIO CATEGORY NAVIGATION (7 Structured Categories) -->
+      <nav class="theme-editor-nav" aria-label="Theme Studio Master Categories">
         <button type="button" class="theme-tab-btn ${currentActiveTab === 'presets' ? 'active' : ''}" data-tab="presets">
-          ${getIcon('palette', 14)} Presets
+          ${getIcon('palette', 16)} <span>Themes & Presets</span>
         </button>
         <button type="button" class="theme-tab-btn ${currentActiveTab === 'colors' ? 'active' : ''}" data-tab="colors">
-          ${getIcon('sparkles', 14)} Colors
+          ${getIcon('sparkles', 16)} <span>Colors & Hierarchy</span>
         </button>
-        <button type="button" class="theme-tab-btn ${currentActiveTab === 'background' ? 'active' : ''}" data-tab="background">
-          ${getIcon('eye', 14)} Background
+        <button type="button" class="theme-tab-btn ${currentActiveTab === 'atmosphere' ? 'active' : ''}" data-tab="atmosphere">
+          ${getIcon('eye', 16)} <span>Atmosphere & Glows</span>
         </button>
-        <button type="button" class="theme-tab-btn ${currentActiveTab === 'glows' ? 'active' : ''}" data-tab="glows">
-          ${getIcon('sparkles', 14)} Glows & Effects
-        </button>
-        <button type="button" class="theme-tab-btn ${currentActiveTab === 'cards' ? 'active' : ''}" data-tab="cards">
-          ${getIcon('projects', 14)} Cards
-        </button>
-        <button type="button" class="theme-tab-btn ${currentActiveTab === 'buttons' ? 'active' : ''}" data-tab="buttons">
-          ${getIcon('gamepad', 14)} Buttons
+        <button type="button" class="theme-tab-btn ${currentActiveTab === 'components' ? 'active' : ''}" data-tab="components">
+          ${getIcon('projects', 16)} <span>Cards & Buttons</span>
         </button>
         <button type="button" class="theme-tab-btn ${currentActiveTab === 'typography' ? 'active' : ''}" data-tab="typography">
-          ${getIcon('pencil', 14)} Typography
+          ${getIcon('edit', 16)} <span>Typography & Scale</span>
         </button>
         <button type="button" class="theme-tab-btn ${currentActiveTab === 'layout' ? 'active' : ''}" data-tab="layout">
-          ${getIcon('settings', 14)} Layout & Spacing
+          ${getIcon('settings', 16)} <span>Layout & Nav/Footer</span>
         </button>
-        <button type="button" class="theme-tab-btn ${currentActiveTab === 'navbar' ? 'active' : ''}" data-tab="navbar">
-          ${getIcon('link', 14)} Navbar
-        </button>
-        <button type="button" class="theme-tab-btn ${currentActiveTab === 'footer' ? 'active' : ''}" data-tab="footer">
-          ${getIcon('folder', 14)} Footer
-        </button>
-        <button type="button" class="theme-tab-btn ${currentActiveTab === 'animations' ? 'active' : ''}" data-tab="animations">
-          ${getIcon('videos', 14)} Animations
-        </button>
-        <button type="button" class="theme-tab-btn ${currentActiveTab === 'shapes' ? 'active' : ''}" data-tab="shapes">
-          ${getIcon('sparkles', 14)} Decorative Shapes
-        </button>
-        <button type="button" class="theme-tab-btn ${currentActiveTab === 'progress' ? 'active' : ''}" data-tab="progress">
-          ${getIcon('arrowRight', 14)} Scroll Progress
+        <button type="button" class="theme-tab-btn ${currentActiveTab === 'motion' ? 'active' : ''}" data-tab="motion">
+          ${getIcon('videos', 16)} <span>Motion & Shapes</span>
         </button>
       </nav>
 
-      <!-- 1. PRESETS TAB CONTENT -->
+      <!-- ==========================================================================
+           1. THEMES & PRESETS CATEGORY
+           ========================================================================== -->
       <section class="theme-tab-content ${currentActiveTab === 'presets' ? 'active' : ''}" id="tab-content-presets">
         <div class="form-section">
           <div class="theme-section-header">
             <div class="theme-section-title">
-              <span>Curated Aesthetic Presets</span>
+              <span>Curated Visual Identity Presets</span>
             </div>
-            <span class="badge">${currentPreset.toUpperCase()}</span>
+            <span class="badge badge-featured">CURRENT: ${currentPreset.toUpperCase()}</span>
           </div>
 
           <div class="grid grid-cols-3 gap-md" style="margin-bottom: var(--space-lg);">
@@ -248,7 +244,7 @@ export function renderAdminAppearanceView() {
               <div class="theme-preset-card ${currentPreset === key ? 'active' : ''}" data-preset-key="${key}">
                 <div class="flex items-center justify-between">
                   <strong style="font-size: var(--text-sm); color: var(--text-main);">${preset.name}</strong>
-                  <div style="width: 14px; height: 14px; border-radius: 50%; background: ${preset.accentPrimary || '#38bdf8'}; box-shadow: 0 0 8px ${preset.accentPrimary || '#38bdf8'};"></div>
+                  <div style="width: 14px; height: 14px; border-radius: 50%; background: ${preset.accentPrimary || (preset.tokens && preset.tokens.accentPrimaryHex) || '#38bdf8'}; box-shadow: 0 0 8px ${preset.accentPrimary || (preset.tokens && preset.tokens.accentPrimaryHex) || '#38bdf8'};"></div>
                 </div>
                 <p class="text-xs text-muted" style="margin: 0; line-height: 1.5;">${preset.description || preset.desc || ''}</p>
                 <button type="button" class="btn btn-secondary btn-sm" style="margin-top: 8px; width: 100%;">
@@ -261,11 +257,11 @@ export function renderAdminAppearanceView() {
           <div class="flex items-center justify-between gap-sm p-md bg-surface-alt rounded border">
             <div>
               <strong style="font-size: var(--text-sm);">Preset Actions</strong>
-              <div class="text-xs text-muted">Save your current visual tweaks or revert back to original default look.</div>
+              <div class="text-xs text-muted">Save your customized appearance as a Custom preset or reset back to Olflaz Dark.</div>
             </div>
             <div class="flex gap-xs">
               <button type="button" class="btn btn-outline btn-sm" id="btn-save-as-custom">
-                💾 Save as Custom
+                💾 Save as Custom Preset
               </button>
               <button type="button" class="btn btn-secondary btn-sm" id="btn-revert-olflaz-dark">
                 🔄 Reset to Olflaz Dark
@@ -275,22 +271,24 @@ export function renderAdminAppearanceView() {
         </div>
       </section>
 
-      <!-- 2. COLORS TAB CONTENT -->
+      <!-- ==========================================================================
+           2. COLORS & HIERARCHY CATEGORY
+           ========================================================================== -->
       <section class="theme-tab-content ${currentActiveTab === 'colors' ? 'active' : ''}" id="tab-content-colors">
         
-        <!-- Core Colors -->
+        <!-- Core Surfaces -->
         <div class="form-section">
           <div class="theme-section-header">
-            <div class="theme-section-title">Core Surfaces & Foundation Colors</div>
+            <div class="theme-section-title">Canvas Surfaces & Structural Borders</div>
             <button type="button" class="btn btn-outline btn-sm reset-section-btn" data-section="colors">Reset Colors</button>
           </div>
           <div class="grid grid-cols-2 gap-sm">
-            ${renderColorRow("Page Background", "Deep base canvas", "picker-bgPage", "hex-bgPage", app.bgPage, "#08090c")}
-            ${renderColorRow("Secondary Background", "Alternative section background", "picker-bgPageAlt", "hex-bgPageAlt", app.bgPageAlt, "#0c0e13")}
-            ${renderColorRow("Surface Color", "Base panel / container background", "picker-bgSurface", "hex-bgSurface", app.bgSurface, "#11141b")}
+            ${renderColorRow("Page Canvas Background", "Deep base canvas fill", "picker-bgPage", "hex-bgPage", app.bgPage, "#08090c")}
+            ${renderColorRow("Secondary Canvas Background", "Alternative section background", "picker-bgPageAlt", "hex-bgPageAlt", app.bgPageAlt, "#0c0e13")}
+            ${renderColorRow("Container Surface Color", "Base panel / container background", "picker-bgSurface", "hex-bgSurface", app.bgSurface, "#11141b")}
             ${renderColorRow("Elevated Surface", "Modal & dropdown overlay surfaces", "picker-bgSurfaceElevated", "hex-bgSurfaceElevated", app.bgSurfaceElevated, "#212737")}
-            ${renderColorRow("Border Color", "Subtle divider lines & strokes", "picker-borderColor", "hex-borderColor", app.borderColor, "rgba(255, 255, 255, 0.08)")}
-            ${renderColorRow("Border Subtle", "Very soft hairline boundaries", "picker-borderSubtle", "hex-borderSubtle", app.borderSubtle, "rgba(255, 255, 255, 0.04)")}
+            ${renderColorRow("Primary Border Color", "Subtle divider lines & card strokes", "picker-borderColor", "hex-borderColor", app.borderColor, "rgba(255, 255, 255, 0.08)")}
+            ${renderColorRow("Hairline Border Subtle", "Very soft boundary outlines", "picker-borderSubtle", "hex-borderSubtle", app.borderSubtle, "rgba(255, 255, 255, 0.04)")}
           </div>
         </div>
 
@@ -300,50 +298,53 @@ export function renderAdminAppearanceView() {
             <div class="theme-section-title">Typography & Text Contrast Hierarchy</div>
           </div>
           <div class="grid grid-cols-2 gap-sm">
-            ${renderColorRow("Main Heading", "H1, H2, hero title and punchy headers", "picker-headingMainColor", "hex-headingMainColor", app.headingMainColor, "#f1f4f9")}
-            ${renderColorRow("Secondary Heading", "H3, H4, section card titles", "picker-headingSecondaryColor", "hex-headingSecondaryColor", app.headingSecondaryColor, "#f1f4f9")}
-            ${renderColorRow("Body Text", "Standard paragraphs & general reading text", "picker-textMain", "hex-textMain", app.textMain, "#f1f4f9")}
-            ${renderColorRow("Muted Text", "Descriptions, meta details, and subtitles", "picker-textMuted", "hex-textMuted", app.textMuted, "#94a0b5")}
+            ${renderColorRow("Main Heading (H1/H2)", "Hero title and bold punchy headers", "picker-headingMainColor", "hex-headingMainColor", app.headingMainColor, "#f1f4f9")}
+            ${renderColorRow("Secondary Heading (H3/H4)", "Section and card subheadings", "picker-headingSecondaryColor", "hex-headingSecondaryColor", app.headingSecondaryColor, "#f1f4f9")}
+            ${renderColorRow("Body Text Color", "Standard paragraphs & general reading text", "picker-textMain", "hex-textMain", app.textMain, "#f1f4f9")}
+            ${renderColorRow("Muted Description Color", "Descriptions, meta details, and subtitles", "picker-textMuted", "hex-textMuted", app.textMuted, "#94a0b5")}
             ${renderColorRow("Disabled / Extra Muted", "Subdued captions and placeholders", "picker-textDisabled", "hex-textDisabled", app.textDisabled, "#4b5563")}
-            ${renderColorRow("Link Text", "Hyperlinks and text action anchors", "picker-textLink", "hex-textLink", app.textLink, "#38bdf8")}
+            ${renderColorRow("Link & Anchor Text", "Hyperlinks and interactive text links", "picker-textLink", "hex-textLink", app.textLink, "#38bdf8")}
           </div>
         </div>
 
         <!-- Accent Colors -->
         <div class="form-section">
           <div class="theme-section-header">
-            <div class="theme-section-title">Accent & Signature Palette</div>
+            <div class="theme-section-title">Brand Signature & Accent Palette</div>
           </div>
           <div class="grid grid-cols-2 gap-sm">
-            ${renderColorRow("Primary Accent", "Electric cyan signature color for primary CTAs and active states", "picker-accentPrimary", "hex-accentPrimary", app.accentPrimary, "#38bdf8")}
-            ${renderColorRow("Secondary Accent", "Gradients, secondary highlights and borders", "picker-accentSecondary", "hex-accentSecondary", app.accentSecondary, "#0ea5e9")}
-            ${renderColorRow("Accent Hover", "Color when hovering over accented elements", "picker-accentHover", "hex-accentHover", app.accentHover, "#7dd3fc")}
-            ${renderColorRow("Accent Active", "Pressed / clicked state for accent buttons", "picker-accentActive", "hex-accentActive", app.accentActive, "#0284c7")}
+            ${renderColorRow("Primary Brand Accent", "Electric cyan signature for CTAs and active states", "picker-accentPrimary", "hex-accentPrimary", app.accentPrimary, "#38bdf8")}
+            ${renderColorRow("Secondary Accent Highlight", "Gradients, secondary highlights and borders", "picker-accentSecondary", "hex-accentSecondary", app.accentSecondary, "#0ea5e9")}
+            ${renderColorRow("Accent Hover State", "Color when hovering over accented elements", "picker-accentHover", "hex-accentHover", app.accentHover, "#7dd3fc")}
+            ${renderColorRow("Accent Active State", "Pressed / clicked state for accent buttons", "picker-accentActive", "hex-accentActive", app.accentActive, "#0284c7")}
           </div>
         </div>
 
         <!-- Component Colors -->
         <div class="form-section">
           <div class="theme-section-header">
-            <div class="theme-section-title">Component Colors</div>
+            <div class="theme-section-title">Component Fills & Badge Accents</div>
           </div>
           <div class="grid grid-cols-2 gap-sm">
-            ${renderColorRow("Button Background (Primary)", "Fill color for primary action button", "picker-btnBg", "hex-btnBg", app.btnBg, "#f1f4f9")}
-            ${renderColorRow("Button Text (Primary)", "Text color for primary action button", "picker-btnText", "hex-btnText", app.btnText, "#08090c")}
-            ${renderColorRow("Input Background", "Form input field fill", "picker-inputBg", "hex-inputBg", app.inputBg, "#161923")}
-            ${renderColorRow("Input Focus Border", "Stroke color when input is focused", "picker-inputFocusBorder", "hex-inputFocusBorder", app.inputFocusBorder, "#38bdf8")}
-            ${renderColorRow("Tag / Badge Background", "Pills and status tags fill", "picker-badgeBg", "hex-badgeBg", app.badgeBg, "#161923")}
-            ${renderColorRow("Tag / Badge Text", "Text color for tags and badges", "picker-badgeText", "hex-badgeText", app.badgeText, "#94a0b5")}
+            ${renderColorRow("Primary Button Fill", "Background fill for primary action CTA", "picker-btnBg", "hex-btnBg", app.btnBg, "#f1f4f9")}
+            ${renderColorRow("Primary Button Text", "Text color for primary action CTA", "picker-btnText", "hex-btnText", app.btnText, "#08090c")}
+            ${renderColorRow("Input Field Background", "Form input field fill color", "picker-inputBg", "hex-inputBg", app.inputBg, "#161923")}
+            ${renderColorRow("Input Focus Outline", "Stroke color when form inputs are focused", "picker-inputFocusBorder", "hex-inputFocusBorder", app.inputFocusBorder, "#38bdf8")}
+            ${renderColorRow("Badge / Tag Background", "Fill color for status pills and category badges", "picker-badgeBg", "hex-badgeBg", app.badgeBg, "#161923")}
+            ${renderColorRow("Badge / Tag Text", "Text color for status pills and category badges", "picker-badgeText", "hex-badgeText", app.badgeText, "#94a0b5")}
           </div>
         </div>
       </section>
 
-      <!-- 3. BACKGROUND TAB CONTENT -->
-      <section class="theme-tab-content ${currentActiveTab === 'background' ? 'active' : ''}" id="tab-content-background">
+      <!-- ==========================================================================
+           3. ATMOSPHERE & GLOWS CATEGORY
+           ========================================================================== -->
+      <section class="theme-tab-content ${currentActiveTab === 'atmosphere' ? 'active' : ''}" id="tab-content-atmosphere">
+        
         <div class="form-section">
           <div class="theme-section-header">
-            <div class="theme-section-title">Background Atmosphere & Vignette</div>
-            <button type="button" class="btn btn-outline btn-sm reset-section-btn" data-section="background">Reset Background</button>
+            <div class="theme-section-title">Background Atmosphere, Gradients & Vignette</div>
+            <button type="button" class="btn btn-outline btn-sm reset-section-btn" data-section="background">Reset Atmosphere</button>
           </div>
 
           <div class="grid grid-cols-2 gap-md" style="margin-bottom: var(--space-md);">
@@ -359,9 +360,9 @@ export function renderAdminAppearanceView() {
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="theme-bg-pattern">Background Pattern</label>
+              <label class="form-label" for="theme-bg-pattern">Canvas Pattern</label>
               <select class="form-select" id="theme-bg-pattern">
-                <option value="none" ${app.bgPattern === 'none' ? 'selected' : ''}>None (Smooth Dark Space)</option>
+                <option value="none" ${app.bgPattern === 'none' ? 'selected' : ''}>None (Smooth Clean Canvas)</option>
                 <option value="grid" ${app.bgPattern === 'grid' ? 'selected' : ''}>Blueprint Grid (48px Subtle Grid)</option>
                 <option value="dots" ${app.bgPattern === 'dots' ? 'selected' : ''}>Dot Matrix (28px Subtle Dots)</option>
               </select>
@@ -379,44 +380,17 @@ export function renderAdminAppearanceView() {
               <strong style="font-size: var(--text-xs);">Enable Ambient Canvas Gradient</strong>
             </label>
           </div>
-
-          <!-- Light Points Manager -->
-          <div class="theme-section-header" style="margin-top: var(--space-lg);">
-            <div class="theme-section-title">Atmospheric Light Sources (${lightPoints.length})</div>
-            <button type="button" class="btn btn-secondary btn-sm" id="btn-add-light-point">
-              + Add Light Source
-            </button>
-          </div>
-
-          <div style="display: flex; flex-direction: column; gap: var(--space-xs);" id="light-points-list-container">
-            ${lightPoints.map((lp, idx) => `
-              <div class="theme-shape-item" id="light-point-${lp.id}">
-                <div style="width: 24px; height: 24px; border-radius: 50%; background: ${lp.color || '#38bdf8'}; opacity: ${lp.opacity || 0.04}; box-shadow: 0 0 12px ${lp.color || '#38bdf8'};"></div>
-                <div class="grid grid-cols-4 gap-xs" style="font-size: 11px;">
-                  <div>Pos: <strong>${lp.posX}%, ${lp.posY}%</strong></div>
-                  <div>Size: <strong>${lp.size}px</strong></div>
-                  <div>Opacity: <strong>${lp.opacity}</strong></div>
-                  <div>Blur: <strong>${lp.blur}px</strong></div>
-                </div>
-                <button type="button" class="btn-text-action btn-delete-light-point" data-id="${lp.id}" style="color: var(--danger-text);">
-                  ${getIcon('trash', 14)}
-                </button>
-              </div>
-            `).join("")}
-          </div>
         </div>
-      </section>
 
-      <!-- 4. GLOWS & EFFECTS TAB CONTENT -->
-      <section class="theme-tab-content ${currentActiveTab === 'glows' ? 'active' : ''}" id="tab-content-glows">
+        <!-- Glow Controls -->
         <div class="form-section">
           <div class="theme-section-header">
-            <div class="theme-section-title">Glow Intensity & Spread Controls</div>
+            <div class="theme-section-title">Glow Levels & Radiant Effects</div>
             <button type="button" class="btn btn-outline btn-sm reset-section-btn" data-section="glows">Reset Glows</button>
           </div>
 
           <div class="form-group" style="margin-bottom: var(--space-md);">
-            <label class="form-label" for="theme-glow-level">Global Glow Level Preset</label>
+            <label class="form-label" for="theme-glow-level">Global Glow Preset</label>
             <select class="form-select" id="theme-glow-level">
               <option value="off" ${app.glowLevel === 'off' ? 'selected' : ''}>Off (Zero Glow - Sharp Contours)</option>
               <option value="low" ${app.glowLevel === 'low' ? 'selected' : ''}>Low (Minimal Soft Silhouette)</option>
@@ -433,39 +407,68 @@ export function renderAdminAppearanceView() {
             ${renderSliderRow("Navigation Active Glow", "slider-glowNavActiveBlur", "val-glowNavActiveBlur", app.glowNavActiveBlur || 12, 0, 30, 1, "px")}
           </div>
         </div>
-      </section>
 
-      <!-- 5. CARDS TAB CONTENT -->
-      <section class="theme-tab-content ${currentActiveTab === 'cards' ? 'active' : ''}" id="tab-content-cards">
+        <!-- Light Points Manager -->
         <div class="form-section">
           <div class="theme-section-header">
-            <div class="theme-section-title">Global Card Dimensions & Hover Physics</div>
+            <div class="theme-section-title">Atmospheric Light Sources (${lightPoints.length})</div>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-add-light-point">
+              + Add Light Source
+            </button>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: var(--space-xs);" id="light-points-list-container">
+            ${lightPoints.map((lp) => `
+              <div class="theme-shape-item" id="light-point-${lp.id}">
+                <div style="width: 24px; height: 24px; border-radius: 50%; background: ${lp.color || '#38bdf8'}; opacity: ${lp.opacity || 0.04}; box-shadow: 0 0 12px ${lp.color || '#38bdf8'};"></div>
+                <div class="grid grid-cols-4 gap-xs" style="font-size: 11px;">
+                  <div>Pos: <strong>${lp.posX}%, ${lp.posY}%</strong></div>
+                  <div>Size: <strong>${lp.size}px</strong></div>
+                  <div>Opacity: <strong>${lp.opacity}</strong></div>
+                  <div>Blur: <strong>${lp.blur}px</strong></div>
+                </div>
+                <button type="button" class="btn-text-action btn-delete-light-point" data-id="${lp.id}" style="color: var(--danger-text);" title="Delete light source">
+                  ${getIcon('trash', 14)}
+                </button>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================================================
+           4. CARDS & BUTTONS CATEGORY
+           ========================================================================== -->
+      <section class="theme-tab-content ${currentActiveTab === 'components' ? 'active' : ''}" id="tab-content-components">
+        
+        <!-- Cards Physics -->
+        <div class="form-section">
+          <div class="theme-section-header">
+            <div class="theme-section-title">Card Sizing, Elevation & Hover Physics</div>
             <button type="button" class="btn btn-outline btn-sm reset-section-btn" data-section="cards">Reset Cards</button>
           </div>
 
           <div class="grid grid-cols-2 gap-sm" style="margin-bottom: var(--space-md);">
-            ${renderSliderRow("Border Radius", "slider-cardRadius", "val-cardRadius", app.cardRadius || 10, 0, 30, 1, "px")}
-            ${renderSliderRow("Border Width", "slider-cardBorderWidth", "val-cardBorderWidth", app.cardBorderWidth || 1, 0, 4, 1, "px")}
+            ${renderSliderRow("Card Border Radius", "slider-cardRadius", "val-cardRadius", app.cardRadius || 10, 0, 30, 1, "px")}
+            ${renderSliderRow("Card Border Width", "slider-cardBorderWidth", "val-cardBorderWidth", app.cardBorderWidth || 1, 0, 4, 1, "px")}
             ${renderSliderRow("Hover Lift Distance", "slider-cardHoverLift", "val-cardHoverLift", app.cardHoverLift || 3, 0, 12, 1, "px")}
             ${renderSliderRow("Hover Scale Factor", "slider-cardHoverScale", "val-cardHoverScale", app.cardHoverScale || 1.0, 1.0, 1.05, 0.005)}
             ${renderSliderRow("Image Hover Zoom", "slider-cardImageZoom", "val-cardImageZoom", app.cardImageZoom || 1.025, 1.0, 1.1, 0.005)}
-            ${renderSliderRow("Card Opacity", "slider-cardOpacity", "val-cardOpacity", app.cardOpacity || 1, 0.5, 1, 0.05)}
+            ${renderSliderRow("Card Base Opacity", "slider-cardOpacity", "val-cardOpacity", app.cardOpacity || 1, 0.5, 1, 0.05)}
           </div>
 
           <div class="theme-section-header" style="margin-top: var(--space-md);">
-            <div class="theme-section-title">Card Type Surface Overrides</div>
+            <div class="theme-section-title" style="font-size: var(--text-sm);">Card Type Background Overrides</div>
           </div>
           <div class="grid grid-cols-2 gap-sm">
             ${renderColorRow("Global Card Background", "Default surface for all cards", "picker-cardBg", "hex-cardBg", app.cardBg, "#11141b")}
             ${renderColorRow("Project Cards Background", "Custom tint for project catalog cards", "picker-cardProjectBg", "hex-cardProjectBg", app.cardProjectBg, "#11141b")}
             ${renderColorRow("Video Cards Background", "Custom tint for YouTube video cards", "picker-cardVideoBg", "hex-cardVideoBg", app.cardVideoBg, "#11141b")}
-            ${renderColorRow("Featured Cards Background", "Custom tint for featured spotlight cards", "picker-cardFeaturedBg", "hex-cardFeaturedBg", app.cardFeaturedBg, "#161923")}
+            ${renderColorRow("Featured Spotlight Background", "Custom tint for spotlight cards", "picker-cardFeaturedBg", "hex-cardFeaturedBg", app.cardFeaturedBg, "#161923")}
           </div>
         </div>
-      </section>
 
-      <!-- 6. BUTTONS TAB CONTENT -->
-      <section class="theme-tab-content ${currentActiveTab === 'buttons' ? 'active' : ''}" id="tab-content-buttons">
+        <!-- Buttons Physics -->
         <div class="form-section">
           <div class="theme-section-header">
             <div class="theme-section-title">Button Metrics & Tactile Physics</div>
@@ -474,20 +477,22 @@ export function renderAdminAppearanceView() {
 
           <div class="grid grid-cols-2 gap-sm">
             ${renderSliderRow("Button Border Radius", "slider-btnRadius", "val-btnRadius", app.btnRadius || 6, 0, 30, 1, "px")}
-            ${renderSliderRow("Border Width", "slider-btnBorderWidth", "val-btnBorderWidth", app.btnBorderWidth || 1, 0, 3, 1, "px")}
+            ${renderSliderRow("Button Border Width", "slider-btnBorderWidth", "val-btnBorderWidth", app.btnBorderWidth || 1, 0, 3, 1, "px")}
             ${renderSliderRow("Hover Lift Distance", "slider-btnHoverLift", "val-btnHoverLift", app.btnHoverLift || 2, 0, 8, 1, "px")}
             ${renderSliderRow("Hover Scale Factor", "slider-btnHoverScale", "val-btnHoverScale", app.btnHoverScale || 1.01, 1.0, 1.06, 0.005)}
-            ${renderSliderRow("Click Press-Down Scale", "slider-btnActiveScale", "val-btnActiveScale", app.btnActiveScale || 0.985, 0.92, 1.0, 0.005)}
+            ${renderSliderRow("Press-Down Click Scale", "slider-btnActiveScale", "val-btnActiveScale", app.btnActiveScale || 0.985, 0.92, 1.0, 0.005)}
             ${renderSliderRow("Transition Speed", "slider-btnTransitionSpeed", "val-btnTransitionSpeed", app.btnTransitionSpeed || 140, 50, 400, 10, "ms")}
           </div>
         </div>
       </section>
 
-      <!-- 7. TYPOGRAPHY TAB CONTENT -->
+      <!-- ==========================================================================
+           5. TYPOGRAPHY & SCALE CATEGORY
+           ========================================================================== -->
       <section class="theme-tab-content ${currentActiveTab === 'typography' ? 'active' : ''}" id="tab-content-typography">
         <div class="form-section">
           <div class="theme-section-header">
-            <div class="theme-section-title">Headings & Body Typography Hierarchy</div>
+            <div class="theme-section-title">Headings & Body Typography Scale</div>
             <button type="button" class="btn btn-outline btn-sm reset-section-btn" data-section="typography">Reset Typography</button>
           </div>
 
@@ -500,7 +505,7 @@ export function renderAdminAppearanceView() {
 
           <div class="grid grid-cols-2 gap-md">
             <div class="form-group">
-              <label class="form-label" for="theme-heading-weight">Hero & Main Heading Weight</label>
+              <label class="form-label" for="theme-heading-weight">Hero & Main Heading Font Weight</label>
               <select class="form-select" id="theme-heading-weight">
                 <option value="600" ${app.heroFontWeight === '600' ? 'selected' : ''}>Semi-Bold (600)</option>
                 <option value="700" ${app.heroFontWeight === '700' ? 'selected' : ''}>Bold (700)</option>
@@ -508,7 +513,7 @@ export function renderAdminAppearanceView() {
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label" for="theme-body-line-height">Body Line Height</label>
+              <label class="form-label" for="theme-body-line-height">Body Text Line Height</label>
               <select class="form-select" id="theme-body-line-height">
                 <option value="1.4" ${app.bodyLineHeight === 1.4 ? 'selected' : ''}>Compact (1.4)</option>
                 <option value="1.65" ${app.bodyLineHeight === 1.65 || !app.bodyLineHeight ? 'selected' : ''}>Normal / Balanced (1.65)</option>
@@ -519,11 +524,15 @@ export function renderAdminAppearanceView() {
         </div>
       </section>
 
-      <!-- 8. LAYOUT & SPACING TAB CONTENT -->
+      <!-- ==========================================================================
+           6. LAYOUT & NAV/FOOTER CATEGORY
+           ========================================================================== -->
       <section class="theme-tab-content ${currentActiveTab === 'layout' ? 'active' : ''}" id="tab-content-layout">
+        
+        <!-- Layout Constraints -->
         <div class="form-section">
           <div class="theme-section-header">
-            <div class="theme-section-title">Layout Constraints & Container Scaling</div>
+            <div class="theme-section-title">Layout Width Constraints & Section Spacing</div>
             <button type="button" class="btn btn-outline btn-sm reset-section-btn" data-section="layout">Reset Layout</button>
           </div>
 
@@ -534,10 +543,8 @@ export function renderAdminAppearanceView() {
             ${renderSliderRow("Container Side Padding", "slider-containerPaddingX", "val-containerPaddingX", app.containerPaddingX || 24, 12, 48, 2, "px")}
           </div>
         </div>
-      </section>
 
-      <!-- 9. NAVBAR TAB CONTENT -->
-      <section class="theme-tab-content ${currentActiveTab === 'navbar' ? 'active' : ''}" id="tab-content-navbar">
+        <!-- Navbar -->
         <div class="form-section">
           <div class="theme-section-header">
             <div class="theme-section-title">Navbar Styling & Elevation</div>
@@ -552,16 +559,14 @@ export function renderAdminAppearanceView() {
           </div>
 
           <div class="grid grid-cols-2 gap-sm">
-            ${renderColorRow("Navbar Background Color", "Base fill color behind blur", "picker-navBg", "hex-navBg", app.navBg, "rgba(8, 9, 12, 0.92)")}
-            ${renderColorRow("Link Color (Normal)", "Unselected nav links", "picker-navTextColor", "hex-navTextColor", app.navTextColor, "#94a0b5")}
-            ${renderColorRow("Link Color (Active)", "Currently selected page pill", "picker-navActiveColor", "hex-navActiveColor", app.navActiveColor, "#38bdf8")}
-            ${renderColorRow("Link Color (Hover)", "Mouse hover color", "picker-navHoverColor", "hex-navHoverColor", app.navHoverColor, "#ffffff")}
+            ${renderColorRow("Navbar Background Color", "Base fill behind blur", "picker-navBg", "hex-navBg", app.navBg, "rgba(8, 9, 12, 0.92)")}
+            ${renderColorRow("Nav Link Color (Normal)", "Unselected nav links", "picker-navTextColor", "hex-navTextColor", app.navTextColor, "#94a0b5")}
+            ${renderColorRow("Nav Link Color (Active)", "Currently active page link", "picker-navActiveColor", "hex-navActiveColor", app.navActiveColor, "#38bdf8")}
+            ${renderColorRow("Nav Link Color (Hover)", "Mouse hover highlight color", "picker-navHoverColor", "hex-navHoverColor", app.navHoverColor, "#ffffff")}
           </div>
         </div>
-      </section>
 
-      <!-- 10. FOOTER TAB CONTENT -->
-      <section class="theme-tab-content ${currentActiveTab === 'footer' ? 'active' : ''}" id="tab-content-footer">
+        <!-- Footer -->
         <div class="form-section">
           <div class="theme-section-header">
             <div class="theme-section-title">Footer Visual Styling</div>
@@ -574,19 +579,23 @@ export function renderAdminAppearanceView() {
 
           <div class="grid grid-cols-2 gap-sm">
             ${renderColorRow("Footer Background", "Deep baseline grounding fill", "picker-footerBg", "hex-footerBg", app.footerBg, "#0c0e13")}
-            ${renderColorRow("Footer Column Title Color", "Section headings like Navigation & Connect", "picker-footerHeadingColor", "hex-footerHeadingColor", app.footerHeadingColor, "#ffffff")}
+            ${renderColorRow("Footer Column Title Color", "Section headings like Navigation", "picker-footerHeadingColor", "hex-footerHeadingColor", app.footerHeadingColor, "#ffffff")}
             ${renderColorRow("Footer Link Color", "Subordinate navigation link text", "picker-footerLinkColor", "hex-footerLinkColor", app.footerLinkColor, "#94a0b5")}
             ${renderColorRow("Footer Accent Color", "Hover highlight color", "picker-footerAccentColor", "hex-footerAccentColor", app.footerAccentColor, "#38bdf8")}
           </div>
         </div>
       </section>
 
-      <!-- 11. ANIMATIONS TAB CONTENT -->
-      <section class="theme-tab-content ${currentActiveTab === 'animations' ? 'active' : ''}" id="tab-content-animations">
+      <!-- ==========================================================================
+           7. MOTION & SHAPES CATEGORY
+           ========================================================================== -->
+      <section class="theme-tab-content ${currentActiveTab === 'motion' ? 'active' : ''}" id="tab-content-motion">
+        
+        <!-- Directional Scroll & Hover Motion -->
         <div class="form-section">
           <div class="theme-section-header">
             <div class="theme-section-title">Directional Scroll Reveal & Hover Physics</div>
-            <button type="button" class="btn btn-outline btn-sm reset-section-btn" data-section="animations">Reset Animations</button>
+            <button type="button" class="btn btn-outline btn-sm reset-section-btn" data-section="animations">Reset Motion</button>
           </div>
 
           <div class="flex items-center gap-md p-md bg-surface-alt rounded border" style="margin-bottom: var(--space-md);">
@@ -600,17 +609,46 @@ export function renderAdminAppearanceView() {
             </label>
           </div>
 
-          <div class="grid grid-cols-2 gap-sm" style="margin-bottom: var(--space-md);">
+          <div class="grid grid-cols-2 gap-sm">
             ${renderSliderRow("Scroll Slide Distance", "slider-scrollSlideDistance", "val-scrollSlideDistance", app.scrollSlideDistance || 80, 20, 160, 5, "px")}
             ${renderSliderRow("Scroll Animation Duration", "slider-scrollDuration", "val-scrollDuration", app.scrollDuration || 800, 300, 1500, 50, "ms")}
             ${renderSliderRow("Hover Lift Amount", "slider-animHoverLift", "val-animHoverLift", app.animHoverLift || 6, 0, 16, 1, "px")}
             ${renderSliderRow("Hover Scale Factor", "slider-animHoverScale", "val-animHoverScale", app.animHoverScale || 1.02, 1.0, 1.08, 0.005)}
           </div>
         </div>
-      </section>
 
-      <!-- 12. DECORATIVE SHAPES TAB CONTENT -->
-      <section class="theme-tab-content ${currentActiveTab === 'shapes' ? 'active' : ''}" id="tab-content-shapes">
+        <!-- Scroll Progress -->
+        <div class="form-section">
+          <div class="theme-section-header">
+            <div class="theme-section-title">Vertical Scroll Progress Indicator</div>
+            <button type="button" class="btn btn-outline btn-sm reset-section-btn" data-section="progress">Reset Progress</button>
+          </div>
+
+          <div class="flex items-center gap-md p-md bg-surface-alt rounded border" style="margin-bottom: var(--space-md);">
+            <label class="flex items-center gap-xs" style="cursor: pointer;">
+              <input type="checkbox" id="check-scrollProgressEnabled" ${app.scrollProgressEnabled !== false ? 'checked' : ''} />
+              <strong style="font-size: var(--text-sm);">Enable Scroll Progress Indicator</strong>
+            </label>
+            <label class="flex items-center gap-xs" style="cursor: pointer;">
+              <input type="checkbox" id="check-scrollProgressMobile" ${app.scrollProgressMobile !== false ? 'checked' : ''} />
+              <strong style="font-size: var(--text-sm);">Visible on Mobile Screens</strong>
+            </label>
+          </div>
+
+          <div class="grid grid-cols-2 gap-sm" style="margin-bottom: var(--space-md);">
+            ${renderSliderRow("Bar Width", "slider-scrollProgressWidth", "val-scrollProgressWidth", app.scrollProgressWidth || 3, 1, 10, 1, "px")}
+            ${renderSliderRow("Right Offset", "slider-scrollProgressRight", "val-scrollProgressRight", app.scrollProgressRight || 10, 2, 30, 1, "px")}
+            ${renderSliderRow("Bar Height (Max)", "slider-scrollProgressHeight", "val-scrollProgressHeight", app.scrollProgressHeight || 180, 80, 350, 10, "px")}
+            ${renderSliderRow("Opacity", "slider-scrollProgressOpacity", "val-scrollProgressOpacity", app.scrollProgressOpacity !== undefined ? app.scrollProgressOpacity : 1, 0.2, 1, 0.05)}
+          </div>
+
+          <div class="grid grid-cols-2 gap-sm">
+            ${renderColorRow("Progress Fill Color", "Color of the progressing bar", "picker-scrollProgressColor", "hex-scrollProgressColor", app.scrollProgressColor, "#38bdf8")}
+            ${renderColorRow("Progress Glow Color", "Soft ambient aura around bar", "picker-scrollProgressGlow", "hex-scrollProgressGlow", app.scrollProgressGlow, "rgba(56, 189, 248, 0.3)")}
+          </div>
+        </div>
+
+        <!-- Decorative Shapes -->
         <div class="form-section">
           <div class="theme-section-header">
             <div class="theme-section-title">Atmospheric Background Shapes (${shapes.length})</div>
@@ -645,40 +683,7 @@ export function renderAdminAppearanceView() {
         </div>
       </section>
 
-      <!-- 13. SCROLL PROGRESS TAB CONTENT -->
-      <section class="theme-tab-content ${currentActiveTab === 'progress' ? 'active' : ''}" id="tab-content-progress">
-        <div class="form-section">
-          <div class="theme-section-header">
-            <div class="theme-section-title">Vertical Scroll Progress Bar Indicator</div>
-            <button type="button" class="btn btn-outline btn-sm reset-section-btn" data-section="progress">Reset Scroll Progress</button>
-          </div>
-
-          <div class="flex items-center gap-md p-md bg-surface-alt rounded border" style="margin-bottom: var(--space-md);">
-            <label class="flex items-center gap-xs" style="cursor: pointer;">
-              <input type="checkbox" id="check-scrollProgressEnabled" ${app.scrollProgressEnabled !== false ? 'checked' : ''} />
-              <strong style="font-size: var(--text-sm);">Enable Scroll Progress Indicator</strong>
-            </label>
-            <label class="flex items-center gap-xs" style="cursor: pointer;">
-              <input type="checkbox" id="check-scrollProgressMobile" ${app.scrollProgressMobile !== false ? 'checked' : ''} />
-              <strong style="font-size: var(--text-sm);">Visible on Mobile Screens</strong>
-            </label>
-          </div>
-
-          <div class="grid grid-cols-2 gap-sm" style="margin-bottom: var(--space-md);">
-            ${renderSliderRow("Bar Width", "slider-scrollProgressWidth", "val-scrollProgressWidth", app.scrollProgressWidth || 3, 1, 10, 1, "px")}
-            ${renderSliderRow("Right Offset", "slider-scrollProgressRight", "val-scrollProgressRight", app.scrollProgressRight || 10, 2, 30, 1, "px")}
-            ${renderSliderRow("Bar Height (Max)", "slider-scrollProgressHeight", "val-scrollProgressHeight", app.scrollProgressHeight || 180, 80, 350, 10, "px")}
-            ${renderSliderRow("Opacity", "slider-scrollProgressOpacity", "val-scrollProgressOpacity", app.scrollProgressOpacity !== undefined ? app.scrollProgressOpacity : 1, 0.2, 1, 0.05)}
-          </div>
-
-          <div class="grid grid-cols-2 gap-sm">
-            ${renderColorRow("Progress Fill Color", "Color of the progressing bar", "picker-scrollProgressColor", "hex-scrollProgressColor", app.scrollProgressColor, "#38bdf8")}
-            ${renderColorRow("Progress Glow Color", "Soft ambient aura around bar", "picker-scrollProgressGlow", "hex-scrollProgressGlow", app.scrollProgressGlow, "rgba(56, 189, 248, 0.3)")}
-          </div>
-        </div>
-      </section>
-
-      <!-- BOTTOM SAVE & PERSISTENCE BAR -->
+      <!-- BOTTOM STICKY ACTION & SAVE BAR -->
       <div class="admin-sticky-bar">
         <div class="admin-sticky-bar-left">
           <span style="color: var(--status-active-text);">${getIcon('sparkles', 14)}</span>
@@ -704,7 +709,7 @@ export function renderAdminAppearanceView() {
 
 export function initAdminAppearanceEvents(reRenderCallback) {
   
-  // 1. TAB SWITCHING
+  // 1. MASTER TAB SWITCHING
   document.querySelectorAll(".theme-tab-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       const tabKey = btn.getAttribute("data-tab");
@@ -721,7 +726,23 @@ export function initAdminAppearanceEvents(reRenderCallback) {
     });
   });
 
-  // 2. VIEWPORT TOGGLE
+  // 2. TOGGLE LIVE PREVIEW DOCK
+  const togglePreviewBtn = document.getElementById("btn-toggle-live-preview");
+  const previewDock = document.getElementById("theme-preview-dock");
+  if (togglePreviewBtn && previewDock) {
+    togglePreviewBtn.addEventListener("click", () => {
+      isPreviewOpen = !isPreviewOpen;
+      if (isPreviewOpen) {
+        previewDock.classList.remove("is-collapsed");
+        togglePreviewBtn.innerHTML = `${getIcon('eye', 13)} Hide Preview`;
+      } else {
+        previewDock.classList.add("is-collapsed");
+        togglePreviewBtn.innerHTML = `${getIcon('eye', 13)} Show Preview`;
+      }
+    });
+  }
+
+  // 3. VIEWPORT TOGGLE
   document.querySelectorAll(".theme-viewport-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       const vp = btn.getAttribute("data-viewport");
@@ -736,7 +757,7 @@ export function initAdminAppearanceEvents(reRenderCallback) {
     });
   });
 
-  // 3. COLOR PICKER & HEX INPUT BINDINGS
+  // 4. COLOR PICKER & HEX INPUT BINDINGS
   const setupColorBindings = () => {
     document.querySelectorAll("[data-color-control]").forEach(row => {
       const picker = row.querySelector(".theme-color-picker");
@@ -771,7 +792,7 @@ export function initAdminAppearanceEvents(reRenderCallback) {
   };
   setupColorBindings();
 
-  // 4. RANGE SLIDER BINDINGS
+  // 5. RANGE SLIDER BINDINGS
   document.querySelectorAll(".theme-slider-input").forEach(slider => {
     slider.addEventListener("input", (e) => {
       const val = parseFloat(e.target.value);
@@ -782,12 +803,12 @@ export function initAdminAppearanceEvents(reRenderCallback) {
 
       const propKey = slider.id.replace("slider-", "");
       const updateObj = {};
-      updateObj[propKey] = val;
+      updateObj[propKey] = unit ? `${val}${unit}` : val;
       store.updateAppearance(updateObj);
     });
   });
 
-  // 5. DROPDOWNS & SELECT BINDINGS
+  // 6. DROPDOWNS & SELECT BINDINGS
   const bindSelect = (id, propKey) => {
     const el = document.getElementById(id);
     if (el) {
@@ -805,7 +826,7 @@ export function initAdminAppearanceEvents(reRenderCallback) {
   bindSelect("theme-bg-atmosphere-glow", "bgAtmosphereGlow");
   bindSelect("theme-body-line-height", "bodyLineHeight");
 
-  // 6. CHECKBOX BINDINGS
+  // 7. CHECKBOX BINDINGS
   const bindCheckbox = (id, propKey) => {
     const el = document.getElementById(id);
     if (el) {
@@ -822,7 +843,7 @@ export function initAdminAppearanceEvents(reRenderCallback) {
   bindCheckbox("check-scrollProgressEnabled", "scrollProgressEnabled");
   bindCheckbox("check-scrollProgressMobile", "scrollProgressMobile");
 
-  // 7. PRESET CARD APPLY
+  // 8. PRESET CARD APPLY
   document.querySelectorAll(".theme-preset-card").forEach(card => {
     card.addEventListener("click", () => {
       const key = card.getAttribute("data-preset-key");
@@ -832,7 +853,7 @@ export function initAdminAppearanceEvents(reRenderCallback) {
     });
   });
 
-  // 8. PRESET BUTTONS
+  // 9. PRESET BUTTONS
   const btnSaveCustom = document.getElementById("btn-save-as-custom");
   if (btnSaveCustom) {
     btnSaveCustom.addEventListener("click", () => {
@@ -851,7 +872,7 @@ export function initAdminAppearanceEvents(reRenderCallback) {
     });
   }
 
-  // 9. SECTION RESETS
+  // 10. SECTION RESETS
   document.querySelectorAll(".reset-section-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       const section = btn.getAttribute("data-section");
@@ -861,7 +882,7 @@ export function initAdminAppearanceEvents(reRenderCallback) {
     });
   });
 
-  // 10. RESET ENTIRE THEME
+  // 11. RESET ENTIRE THEME
   const btnResetEntire = document.getElementById("btn-reset-entire-theme");
   if (btnResetEntire) {
     btnResetEntire.addEventListener("click", () => {
@@ -873,7 +894,7 @@ export function initAdminAppearanceEvents(reRenderCallback) {
     });
   }
 
-  // 11. EXPORT / IMPORT THEME JSON
+  // 12. EXPORT / IMPORT THEME JSON
   const btnExport = document.getElementById("btn-export-theme");
   if (btnExport) {
     btnExport.addEventListener("click", () => {
@@ -915,11 +936,11 @@ export function initAdminAppearanceEvents(reRenderCallback) {
     });
   }
 
-  // 12. SHAPE ACTIONS (Add, Toggle, Delete)
+  // 13. SHAPE ACTIONS (Add, Toggle, Delete)
   const btnAddShape = document.getElementById("btn-add-shape");
   if (btnAddShape) {
     btnAddShape.addEventListener("click", () => {
-      const newShape = store.addDecorativeShape({
+      store.addDecorativeShape({
         type: "circle",
         posX: Math.floor(Math.random() * 80) + 10,
         posY: Math.floor(Math.random() * 80) + 10,
@@ -953,7 +974,7 @@ export function initAdminAppearanceEvents(reRenderCallback) {
     });
   });
 
-  // 13. LIGHT POINT ACTIONS (Add, Delete)
+  // 14. LIGHT POINT ACTIONS (Add, Delete)
   const btnAddLightPoint = document.getElementById("btn-add-light-point");
   if (btnAddLightPoint) {
     btnAddLightPoint.addEventListener("click", () => {
@@ -979,7 +1000,7 @@ export function initAdminAppearanceEvents(reRenderCallback) {
     });
   });
 
-  // 14. SAVE ALL BUTTON
+  // 15. SAVE ALL & DISCARD BUTTONS
   const btnSaveAll = document.getElementById("btn-save-all-theme");
   if (btnSaveAll) {
     btnSaveAll.addEventListener("click", () => {

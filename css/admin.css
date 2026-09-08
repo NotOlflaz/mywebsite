@@ -906,14 +906,14 @@
 .theme-editor-nav {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   background: var(--bg-surface);
-  padding: 4px;
+  padding: 6px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
   overflow-x: auto;
   max-width: 100%;
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--space-xl);
   position: sticky;
   top: var(--header-height);
   z-index: 25;
@@ -922,14 +922,14 @@
 .theme-tab-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  font-size: var(--text-xs);
+  gap: 8px;
+  padding: 8px 16px;
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--text-muted);
   background: transparent;
   border: 1px solid transparent;
-  border-radius: var(--radius-xs);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   white-space: nowrap;
   transition: all var(--dur-fast) ease;
@@ -945,7 +945,7 @@
   color: var(--accent-text);
   border-color: var(--accent-border);
   font-weight: 700;
-  box-shadow: 0 0 10px var(--accent-surface);
+  box-shadow: 0 0 12px var(--accent-surface);
 }
 
 .theme-tab-content {
@@ -957,6 +957,26 @@
   flex-direction: column;
   gap: var(--space-xl);
   animation: pageFadeIn 180ms ease forwards;
+}
+
+.theme-group-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-lg);
+}
+
+.theme-group-card:hover {
+  border-color: var(--border-hover);
+}
+
+.theme-preview-collapsible {
+  transition: all var(--dur-normal) ease;
+}
+
+.theme-preview-collapsible.is-collapsed {
+  display: none;
 }
 
 .theme-section-header {
